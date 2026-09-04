@@ -1,0 +1,29 @@
+{
+  "name": "@rai/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "lucide-react": "0.468.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.5.4",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9",
+    "autoprefixer": "10.4.20",
+    "eslint": "9.35.0",
+    "eslint-config-next": "16.3.4",
+    "postcss": "8.5.28",
+    "tailwindcss": "3.4.13",
+    "typescript": "5.6.2"
+  }
+}
