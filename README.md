@@ -6,7 +6,6 @@
 
 **Merchant revenue intelligence and recovery — policy-bounded, deterministic, and fully auditable.**
 
-[![Sprint](https://img.shields.io/badge/Sprint-5-6E56CF?style=for-the-badge)](#)
 [![Mode](https://img.shields.io/badge/Mode-Mock%20First-22C55E?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-Unspecified-lightgrey?style=for-the-badge)](#)
 
