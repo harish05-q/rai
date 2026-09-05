@@ -7,6 +7,14 @@ class Settings(BaseSettings):
     app_env: str = "development"
     database_url: str = "postgresql+psycopg://rai:rai_dev_password@localhost:5432/rai"
 
+    ai_mode: str = "mock"
+    llm_provider: str = ""
+    llm_model: str = ""
+    llm_api_key: str = ""
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_timeout_seconds: float = 20.0
+    agent_batch_max: int = 25
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

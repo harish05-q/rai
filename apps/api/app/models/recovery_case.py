@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON, Uuid
 
 from app.db.base import Base
+from app.models.ai_decision import AIDecision
 
 if TYPE_CHECKING:
     from app.models.merchant import Merchant
@@ -57,3 +58,7 @@ class RecoveryCase(Base):
 
     merchant: Mapped[Merchant] = relationship(back_populates="recovery_cases")
     payment: Mapped[Payment] = relationship(back_populates="recovery_case")
+    ai_decisions: Mapped[list[AIDecision]] = relationship(
+        back_populates="recovery_case",
+        cascade="all, delete-orphan",
+    )

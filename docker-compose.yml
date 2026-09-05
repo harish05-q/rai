@@ -21,6 +21,13 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://rai:rai_dev_password@postgres:5432/rai}
+      AI_MODE: ${AI_MODE:-mock}
+      LLM_PROVIDER: ${LLM_PROVIDER:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-20}
+      AGENT_BATCH_MAX: ${AGENT_BATCH_MAX:-25}
     ports:
       - "8000:8000"
     depends_on:

@@ -6,25 +6,31 @@ import { ActivityFeed } from "@/components/activity-feed";
 import { HealthIndicator } from "@/components/health-indicator";
 import { MetricGrid } from "@/components/metric-grid";
 import { StatusNotice } from "@/components/status-notice";
-import { getRecoveryCases, getRecoverySummary, type RecoverySummary } from "@/lib/api-client";
+import { getAgentSummary, getRecoveryCases, getRecoverySummary, type AgentSummary, type RecoverySummary } from "@/lib/api-client";
 import { formatInr } from "@/lib/format";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
 export function DashboardOverview() {
   const [summary, setSummary] = useState<RecoverySummary | null>(null);
+  const [aiSummary, setAiSummary] = useState<AgentSummary | null>(null);
   const [activity, setActivity] = useState<{ title: string; description: string; time: string; kind: "analysis" | "strategy" | "recovered" }[]>([]);
   const [state, setState] = useState<LoadState>("loading");
 
   useEffect(() => {
     let active = true;
 
-    Promise.all([getRecoverySummary(), getRecoveryCases({ limit: 5, offset: 0 })])
-      .then(([metrics, cases]) => {
+    Promise.all([
+      getRecoverySummary(),
+      getRecoveryCases({ limit: 5, offset: 0 }),
+      getAgentSummary().catch(() => null)
+    ])
+      .then(([metrics, cases, agentMetrics]) => {
         if (!active) {
           return;
         }
         setSummary(metrics);
+        setAiSummary(agentMetrics);
         setActivity(
           cases.items.map((item) => ({
             title: item.status === "recovered" ? "Payment recovered" : "Recovery case scored",
@@ -85,8 +91,8 @@ export function DashboardOverview() {
           <p className="text-sm font-semibold uppercase tracking-[0.12em] text-accent">Operations Dashboard</p>
           <h1 className="mt-2 text-3xl font-semibold text-ink">Revenue recovery command center</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/70">
-            Sprint 2 KPIs are sourced from the recovery summary API. Analysis is deterministic and does
-            not execute payments.
+            Sprint 3 KPIs are sourced from recovery and agent APIs. Opening the dashboard does not call
+            an LLM. Analysis is recommendation-only and does not execute payments.
           </p>
         </div>
         <HealthIndicator />
@@ -103,6 +109,50 @@ export function DashboardOverview() {
         />
       ) : null}
       {state === "ready" ? <MetricGrid metrics={metrics} /> : null}
+
+      {state === "ready" ? (
+        <section className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold text-ink">R.AI intelligence</h2>
+            <p className="mt-1 text-sm text-ink/60">Stored recommendations only. The dashboard never triggers analysis.</p>
+          </div>
+          {!aiSummary || aiSummary.cases_analyzed === 0 ? (
+            <StatusNotice
+              title="No AI analyses yet"
+              description="Open a recovery case and choose Analyze with R.AI. Mock mode works without an LLM API key."
+            />
+          ) : (
+            <MetricGrid
+              metrics={[
+                {
+                  label: "AI cases analyzed",
+                  value: String(aiSummary.cases_analyzed),
+                  note: `${aiSummary.recommendations} stored recommendations.`
+                },
+                {
+                  label: "Average AI confidence",
+                  value:
+                    aiSummary.average_confidence === null
+                      ? "—"
+                      : `${Math.round(aiSummary.average_confidence * 100)}%`,
+                  note: "Mean confidence across immutable AI decisions."
+                },
+                {
+                  label: "AI / baseline agreement",
+                  value:
+                    aiSummary.agreement_rate === null ? "—" : `${Math.round(aiSummary.agreement_rate * 100)}%`,
+                  note: "Neutral comparison. Disagreement is not treated as superiority."
+                },
+                {
+                  label: "Cases requiring review",
+                  value: String(aiSummary.cases_requiring_review),
+                  note: "Latest stored recommendations of human review."
+                }
+              ]}
+            />
+          )}
+        </section>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <ActivityFeed

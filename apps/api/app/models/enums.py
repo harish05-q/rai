@@ -59,3 +59,30 @@ class RecoveryCaseStatus(StrEnum):
     RECOVERED = "recovered"
     RESOLVED = "resolved"
     BLOCKED = "blocked"
+
+
+class FailureSeverity(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class RecoverabilityAssessment(StrEnum):
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    NONE = "none"
+    UNCERTAIN = "uncertain"
+
+
+class StrategyTiming(StrEnum):
+    IMMEDIATE = "immediate"
+    DELAYED = "delayed"
+    NEXT_BILLING = "next_billing"
+    AFTER_CUSTOMER_ACTION = "after_customer_action"
+    NONE = "none"
+
+
+class ComparisonStatus(StrEnum):
+    ALIGNED = "aligned"
+    DIFFERS = "differs"

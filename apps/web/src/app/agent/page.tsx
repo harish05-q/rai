@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { AgentWorkspace } from "@/components/agent-workspace";
 
 export default function AgentPage() {
-  return <PlaceholderPage title="Agent" description="Agent orchestration is out of scope until a future sprint." />;
+  return <AgentWorkspace />;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { StatusNotice } from "@/components/status-notice";
@@ -114,7 +115,9 @@ export function RecoveryQueue() {
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-line last:border-b-0">
                   <td className="px-4 py-3">
-                    <div className="font-medium text-ink">{item.external_payment_id}</div>
+                    <Link href={`/recovery/${item.id}`} className="font-medium text-ink hover:underline">
+                      {item.external_payment_id}
+                    </Link>
                     <div className="text-xs text-ink/55">{item.customer_name}</div>
                   </td>
                   <td className="px-4 py-3">{formatInr(item.revenue_at_risk)}</td>

@@ -66,7 +66,121 @@ export type AnalyzeResponse = {
   executed_payment_operations: boolean;
 };
 
+export type RecoveryCaseDetail = RecoveryCaseListItem & {
+  payment_method: string;
+  attempt_number: number;
+  checkout_completed: boolean;
+  failure_code: string | null;
+  failure_message: string | null;
+  customer_successful_payments: number;
+  customer_failed_payments: number;
+  customer_total_payments: number;
+};
+
+export type AIDiagnosis = {
+  failure_category: string;
+  failure_severity: string;
+  recoverability_assessment: string;
+  key_context_factors: string[];
+};
+
+export type AIStrategy = {
+  recommended_action: string;
+  rationale: string;
+  confidence: number;
+  timing: string;
+  alternative_action: string | null;
+  concerns: string[];
+};
+
+export type AIRecoveryDecision = {
+  id: string;
+  case_id: string;
+  diagnosis: AIDiagnosis;
+  strategy: AIStrategy;
+  baseline_action: string;
+  baseline_score: string;
+  ai_confidence: number;
+  comparison: {
+    status: string;
+    reason: string;
+  };
+  model: string;
+  provider: string;
+  ai_mode: string;
+  recommendation_only: boolean;
+  created_at: string;
+};
+
+export type AgentCaseResponse = {
+  case_id: string;
+  analysis: AIRecoveryDecision | null;
+  history_count: number;
+  recommendation_only: boolean;
+};
+
+export type AgentActivityItem = {
+  id: string;
+  case_id: string;
+  external_payment_id: string;
+  title: string;
+  diagnosis_label: string;
+  recommended_action: string;
+  confidence: string;
+  baseline_action: string;
+  comparison_status: string;
+  comparison_reason: string;
+  ai_mode: string;
+  created_at: string;
+};
+
+export type PaginatedAgentActivity = {
+  items: AgentActivityItem[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type AgentSummary = {
+  cases_analyzed: number;
+  recommendations: number;
+  average_confidence: number | null;
+  agreement_rate: number | null;
+  cases_requiring_review: number;
+  ai_mode: string;
+  recommendation_only: boolean;
+};
+
+export type AgentStatus = {
+  ai_mode: string;
+  provider: string;
+  model: string;
+  available: boolean;
+  recommendation_only: boolean;
+};
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+
+async function readApiError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { detail?: unknown; error?: string };
+    if (typeof body.detail === "string") {
+      return body.detail;
+    }
+    if (body.detail && typeof body.detail === "object" && "message" in body.detail) {
+      const message = (body.detail as { message?: unknown }).message;
+      if (typeof message === "string") {
+        return message;
+      }
+    }
+    if (typeof body.error === "string") {
+      return body.error;
+    }
+  } catch {
+    /* use status fallback */
+  }
+  return `API request failed with status ${response.status}`;
+}
 
 async function apiGet<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -77,7 +191,7 @@ async function apiGet<T>(path: string): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    throw new Error(await readApiError(response));
   }
 
   return response.json() as Promise<T>;
@@ -95,7 +209,7 @@ async function apiPost<T>(path: string, body: Record<string, unknown> = {}): Pro
   });
 
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    throw new Error(await readApiError(response));
   }
 
   return response.json() as Promise<T>;
@@ -160,4 +274,33 @@ export function getRecoverySummary(): Promise<RecoverySummary> {
 
 export function analyzeRecovery(): Promise<AnalyzeResponse> {
   return apiPost<AnalyzeResponse>("/api/v1/recovery/analyze");
+}
+
+export function getRecoveryCase(caseId: string): Promise<RecoveryCaseDetail> {
+  return apiGet<RecoveryCaseDetail>(`/api/v1/recovery/cases/${caseId}`);
+}
+
+export function getAgentStatus(): Promise<AgentStatus> {
+  return apiGet<AgentStatus>("/api/v1/agent/status");
+}
+
+export function getAgentSummary(): Promise<AgentSummary> {
+  return apiGet<AgentSummary>("/api/v1/agent/summary");
+}
+
+export function getAgentActivity(params: { limit?: number; offset?: number } = {}): Promise<PaginatedAgentActivity> {
+  return apiGet<PaginatedAgentActivity>(
+    withQuery("/api/v1/agent/activity", {
+      limit: params.limit,
+      offset: params.offset
+    })
+  );
+}
+
+export function getAgentCaseAnalysis(caseId: string): Promise<AgentCaseResponse> {
+  return apiGet<AgentCaseResponse>(`/api/v1/agent/cases/${caseId}`);
+}
+
+export function analyzeAgentCase(caseId: string): Promise<AIRecoveryDecision> {
+  return apiPost<AIRecoveryDecision>(`/api/v1/agent/analyze/${caseId}`);
 }

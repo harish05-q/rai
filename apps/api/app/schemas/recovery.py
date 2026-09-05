@@ -47,6 +47,17 @@ class RecoveryCaseListItem(BaseModel):
     created_at: datetime
 
 
+class RecoveryCaseDetail(RecoveryCaseListItem):
+    payment_method: str
+    attempt_number: int
+    checkout_completed: bool
+    failure_code: str | None
+    failure_message: str | None
+    customer_successful_payments: int
+    customer_failed_payments: int
+    customer_total_payments: int
+
+
 class PaginatedRecoveryCases(BaseModel):
     items: list[RecoveryCaseListItem]
     total: int

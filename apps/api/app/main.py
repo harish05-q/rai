@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, payments, recovery
+from app.api.routes import health, payments, recovery, agent
 
-app = FastAPI(title="R.AI API", version="0.2.0")
+app = FastAPI(title="R.AI API", version="0.3.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -14,3 +14,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(payments.router)
 app.include_router(recovery.router)
+app.include_router(agent.router)

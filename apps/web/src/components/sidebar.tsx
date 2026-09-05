@@ -55,8 +55,8 @@ export function Sidebar({ pathname }: { pathname: string }) {
         </nav>
 
         <div className="mt-auto rounded-lg border border-line bg-field p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/50">Sprint 2</p>
-          <p className="mt-2 text-sm leading-6 text-ink/70">Payment recovery intelligence with deterministic scoring.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/50">Sprint 3</p>
+          <p className="mt-2 text-sm leading-6 text-ink/70">Recommendation-only recovery intelligence. No payment execution.</p>
         </div>
       </div>
     </aside>
