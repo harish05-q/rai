@@ -13,12 +13,14 @@ import {
   getApprovals,
   getAudit,
   getRecoveryCase,
+  getRecoveryOutcomes,
   type ActionExecution,
   type AgentCaseResponse,
   type ApprovalRequest,
   type AuditLogItem,
   type ExecutionPreview,
-  type RecoveryCaseDetail
+  type RecoveryCaseDetail,
+  type RecoveryOutcome
 } from "@/lib/api-client";
 import { formatDate, formatInr, formatLabel } from "@/lib/format";
 
@@ -29,6 +31,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
   const [executions, setExecutions] = useState<ActionExecution[]>([]);
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [audit, setAudit] = useState<AuditLogItem[]>([]);
+  const [outcomes, setOutcomes] = useState<RecoveryOutcome[]>([]);
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [analyzing, setAnalyzing] = useState(false);
   const [executing, setExecuting] = useState(false);
@@ -40,14 +43,16 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
       getAgentCaseAnalysis(caseId),
       getActions({ case_id: caseId, limit: 20 }),
       getApprovals({ case_id: caseId, limit: 20 }),
-      getAudit({ case_id: caseId, limit: 50 })
+      getAudit({ case_id: caseId, limit: 50 }),
+      getRecoveryOutcomes(caseId)
     ])
-      .then(async ([caseDetail, analysis, actions, approvalList, auditList]) => {
+      .then(async ([caseDetail, analysis, actions, approvalList, auditList, outcomeList]) => {
         setDetail(caseDetail);
         setAgent(analysis);
         setExecutions(actions.items);
         setApprovals(approvalList.items);
         setAudit(auditList.items);
+        setOutcomes(outcomeList.items);
         if (analysis.analysis) {
           try {
             setPreview(await evaluateCasePolicy(caseId));
@@ -93,6 +98,15 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
   const pendingApproval = approvals.find((item) => item.status === "pending");
   const policyLabel = preview?.policy_decision ?? "not evaluated";
   const executionLabel = latest?.status ?? "none";
+  const latestOutcome = outcomes[0];
+  const lifecycle = [
+    { label: "Diagnosed", complete: Boolean(detail) },
+    { label: "Recommended", complete: Boolean(analysis) },
+    { label: "Policy Checked", complete: Boolean(preview) },
+    { label: "Executed", complete: latest?.status === "succeeded" },
+    { label: "Observed", complete: Boolean(latestOutcome) },
+    { label: "Recovered", complete: latestOutcome?.outcome_status === "paid" }
+  ];
 
   return (
     <div className="space-y-6">
@@ -180,6 +194,22 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
           </section>
 
           <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-ink">Recovery lifecycle</h2>
+              <span className="text-xs text-ink/55">Recovered requires an observed paid outcome.</span>
+            </div>
+            <ol className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+              {lifecycle.map((step, index) => (
+                <li key={step.label} className={`rounded-md border p-3 text-sm ${step.complete ? "border-accent/40 bg-accent/5" : "border-line bg-field"}`}>
+                  <span className="text-xs font-semibold text-ink/50">0{index + 1}</span>
+                  <p className="mt-2 font-semibold">{step.label}</p>
+                  <p className="mt-1 text-xs text-ink/55">{step.complete ? "Complete" : "Pending"}</p>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-ink">Case context</h2>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
               <div>
@@ -188,7 +218,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
               </div>
               <div>
                 <dt className="text-ink/50">Failure</dt>
-                <dd>{formatLabel(detail.failure_category)}</dd>
+                <dd>{formatLabel(detail.failure_category)}{detail.failure_message ? `: ${detail.failure_message}` : ""}</dd>
               </div>
               <div>
                 <dt className="text-ink/50">Method</dt>
@@ -231,6 +261,10 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
                   <dd className="font-medium text-ink">{formatLabel(analysis.strategy.recommended_action)}</dd>
                 </div>
                 <div>
+                  <dt className="text-ink/50">Baseline recommendation</dt>
+                  <dd>{formatLabel(analysis.baseline_action)}</dd>
+                </div>
+                <div>
                   <dt className="text-ink/50">Confidence</dt>
                   <dd>{Math.round(analysis.ai_confidence * 100)}%</dd>
                 </div>
@@ -263,6 +297,14 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
                 <dd className="break-all">{latest?.provider_reference ?? "—"}</dd>
               </div>
               <div>
+                <dt className="text-ink/50">Outcome status</dt>
+                <dd>{formatLabel(latestOutcome?.outcome_status ?? detail.status)}</dd>
+              </div>
+              <div>
+                <dt className="text-ink/50">Recovered amount</dt>
+                <dd>{latestOutcome?.amount_recovered ? formatInr(latestOutcome.amount_recovered) : "—"}</dd>
+              </div>
+              <div>
                 <dt className="text-ink/50">Payment link</dt>
                 <dd>
                   {typeof latest?.result?.payment_link_url === "string" ? (
@@ -290,6 +332,15 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             {latest?.status === "succeeded" && latest.result?.mock === true ? (
               <p className="mt-3 text-xs text-ink/50">Mock provider result. This is not a live Razorpay operation.</p>
             ) : null}
+          </section>
+
+          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+            <h2 className="text-lg font-semibold text-ink">Observed outcomes</h2>
+            {outcomes.length === 0 ? <p className="mt-3 text-sm text-ink/65">No provider outcome has been observed yet.</p> : (
+              <ul className="mt-4 divide-y divide-line text-sm">
+                {outcomes.map((outcome) => <li key={outcome.id} className="flex flex-wrap justify-between gap-2 py-3"><span className="font-medium">{formatLabel(outcome.outcome_status)}</span><span>{outcome.provider_reference ?? "No provider reference"}</span><span className="text-ink/55">{formatDate(outcome.observed_at)}</span></li>)}
+              </ul>
+            )}
           </section>
 
           <section className="rounded-lg border border-line bg-white p-6 shadow-soft">

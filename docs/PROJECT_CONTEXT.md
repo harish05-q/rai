@@ -20,7 +20,7 @@ The LLM must never have unrestricted authority over payment operations. The Poli
 
 ## Current sprint
 
-**Sprint 4 — Guardrails + Action Execution + Razorpay integration** is complete.
+**Sprint 5 — Outcome observation, evaluation, analytics, and demo integration** is complete.
 
 Sprints 1–3 remain in place and were not rebuilt.
 
@@ -56,6 +56,14 @@ Do not start Sprint 5 automatically.
 - Execute, approvals, actions, audit, and policy APIs
 - Recovery detail execution UI, Approval Center, real Audit page, Settings guardrails, dashboard execution KPIs
 
+### Sprint 5
+
+- Payment Link outcome observation with idempotent outcome records
+- Recovery lifecycle state and recovered amount only after a paid observation
+- Deterministic baseline versus R.AI evaluation on stored cases
+- Analytics endpoints and Performance Center UI
+- Mock-only end-to-end recovery demo
+
 ## Current technology stack
 
 - Frontend: Next.js, TypeScript, App Router, Tailwind CSS
@@ -87,10 +95,8 @@ Expected local ports: frontend `3000`, backend `8000`, PostgreSQL `5432`.
 
 Copy `.env.example` to `.env`. Do not commit filled `.env` files with secrets.
 
-## What remains to be built (after Sprint 4)
+## What remains to be built (after Sprint 5)
 
-- Outcome observation / webhook handling for Payment Link paid events
-- Evaluation harness
 - Production authentication, notifications product, billing, fraud detection, advanced analytics
 - Richer subscription lifecycle if Razorpay documents additional recovery APIs
 
@@ -98,8 +104,4 @@ Copy `.env.example` to `.env`. Do not commit filled `.env` files with secrets.
 
 Recommended next sprint only after an explicit request:
 
-**Sprint 5 — Outcome observation and evaluation**
-
-- Payment Link / subscription status observation
-- Recovery outcome recording
-- Evaluation of recommendation vs execution vs collection
+Sprint 5 is implemented. Synthetic evaluation metrics are explicitly labeled in the UI and API; observed paid outcomes are sourced from the outcome records.

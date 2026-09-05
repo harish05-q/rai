@@ -9,10 +9,12 @@ import { StatusNotice } from "@/components/status-notice";
 import {
   getActions,
   getAgentSummary,
+  getAnalyticsOverview,
   getExecutionSummary,
   getMerchantPolicy,
   getRecoverySummary,
   type AgentSummary,
+  type AnalyticsOverview,
   type ExecutionSummary,
   type MerchantPolicy,
   type RecoverySummary
@@ -23,6 +25,7 @@ type LoadState = "loading" | "ready" | "empty" | "error";
 
 export function DashboardOverview() {
   const [summary, setSummary] = useState<RecoverySummary | null>(null);
+  const [overview, setOverview] = useState<AnalyticsOverview | null>(null);
   const [aiSummary, setAiSummary] = useState<AgentSummary | null>(null);
   const [execution, setExecution] = useState<ExecutionSummary | null>(null);
   const [policy, setPolicy] = useState<MerchantPolicy | null>(null);
@@ -37,13 +40,15 @@ export function DashboardOverview() {
       getExecutionSummary().catch(() => null),
       getMerchantPolicy().catch(() => null),
       getActions({ limit: 5 }).catch(() => ({ items: [], total: 0, limit: 5, offset: 0 })),
-      getAgentSummary().catch(() => null)
+      getAgentSummary().catch(() => null),
+      getAnalyticsOverview().catch(() => null)
     ])
-      .then(([metrics, executionMetrics, merchantPolicy, actions, agentMetrics]) => {
+      .then(([metrics, executionMetrics, merchantPolicy, actions, agentMetrics, analyticsOverview]) => {
         if (!active) {
           return;
         }
         setSummary(metrics);
+        setOverview(analyticsOverview);
         setExecution(executionMetrics);
         setPolicy(merchantPolicy);
         setAiSummary(agentMetrics);
@@ -84,6 +89,11 @@ export function DashboardOverview() {
         note: "Policy-approved executions that reached a provider or no-op success."
       },
       {
+        label: "Revenue recovered",
+        value: formatInr(overview?.recovered_revenue ?? "0.00"),
+        note: "Observed paid outcomes, not successful execution intent."
+      },
+      {
         label: "Actions blocked",
         value: String(execution?.actions_blocked ?? 0),
         note: "Deterministic Policy Engine denials."
@@ -94,7 +104,7 @@ export function DashboardOverview() {
         note: "High-value or uncertain cases waiting for an operator."
       }
     ];
-  }, [summary, execution]);
+  }, [summary, execution, overview]);
 
   const executionMetrics = useMemo(() => {
     if (!execution) {
@@ -133,7 +143,7 @@ export function DashboardOverview() {
           <p className="text-sm font-semibold uppercase tracking-[0.12em] text-accent">Operations Dashboard</p>
           <h1 className="mt-2 text-3xl font-semibold text-ink">Revenue recovery command center</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/70">
-            Sprint 4 KPIs come from recovery, policy, and execution APIs. Empty states are shown when no executions exist.
+            Recovery, policy, execution, and observed outcome signals for daily operations.
           </p>
         </div>
         <HealthIndicator />

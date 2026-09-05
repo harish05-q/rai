@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { AnalyticsCenter } from "@/components/analytics-center";
 
 export default function AnalyticsPage() {
-  return <PlaceholderPage title="Analytics" description="Analytics views will appear after real recovery data exists." />;
+  return <AnalyticsCenter />;
 }

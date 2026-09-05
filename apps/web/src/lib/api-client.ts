@@ -58,6 +58,93 @@ export type RecoverySummary = {
   recovered_revenue: string;
 };
 
+export type AnalyticsOverview = {
+  generated_at: string;
+  data_source: string;
+  synthetic: boolean;
+  payments_at_risk: number;
+  recoverable_cases: number;
+  revenue_at_risk: string;
+  recovered_revenue: string;
+  recovered_cases: number;
+  recovery_rate: number | null;
+  successful_actions: number;
+  approvals_pending: number;
+  open_recovery_cases: number;
+};
+
+export type AnalyticsRecovery = {
+  funnel: Record<string, number>;
+  recent_recovered: Array<{
+    id: string;
+    external_payment_id: string;
+    customer_name: string | null;
+    recovered_amount: string;
+    outcome_status: string | null;
+    resolved_at: string | null;
+  }>;
+  synthetic: boolean;
+};
+
+export type AnalyticsEvaluation = {
+  synthetic: boolean;
+  disclaimer: string;
+  cases_evaluated: number;
+  metrics: {
+    revenue_at_risk: string;
+    baseline_recoverable_revenue: string;
+    rai_recoverable_revenue: string;
+    baseline_recovery_rate: number | null;
+    rai_recovery_rate: number | null;
+    recovery_lift: number | null;
+    ai_baseline_agreement: number | null;
+    policy_block_rate: number | null;
+    approval_rate: number | null;
+    execution_success_rate: number | null;
+    revenue_actually_recovered: string;
+  };
+};
+
+export type AnalyticsActions = {
+  total: number;
+  by_status: Record<string, number>;
+  by_workflow: Record<string, number>;
+  by_action: Record<string, number>;
+  execution_success_rate: number | null;
+  policy_block_rate: number | null;
+  provider: string;
+};
+
+export type AnalyticsOutcomes = {
+  total: number;
+  by_status: Record<string, number>;
+  amount_recovered: string;
+};
+
+export type RecoveryOutcome = {
+  id: string;
+  outcome_status: string;
+  provider: string;
+  provider_reference: string | null;
+  workflow: string;
+  amount_recovered: string | null;
+  observed_at: string;
+  source: string;
+};
+
+export type RecoveryDemoResult = {
+  demo: true;
+  mock: true;
+  charges_real_customer: false;
+  disclaimer: string;
+  case_id: string;
+  execution_status: string | null;
+  outcome_status: string | null;
+  recovered: boolean;
+  recovered_amount: string | null;
+  steps: Array<{ stage: string; label: string; detail: string }>;
+};
+
 export type AnalyzeResponse = {
   payments_analyzed: number;
   cases_created: number;
@@ -421,6 +508,34 @@ export function getRecoveryCases(params: {
 
 export function getRecoverySummary(): Promise<RecoverySummary> {
   return apiGet<RecoverySummary>("/api/v1/recovery/summary");
+}
+
+export function getAnalyticsOverview(): Promise<AnalyticsOverview> {
+  return apiGet<AnalyticsOverview>("/api/v1/analytics/overview");
+}
+
+export function getAnalyticsRecovery(): Promise<AnalyticsRecovery> {
+  return apiGet<AnalyticsRecovery>("/api/v1/analytics/recovery");
+}
+
+export function getAnalyticsEvaluation(): Promise<AnalyticsEvaluation> {
+  return apiGet<AnalyticsEvaluation>("/api/v1/analytics/evaluation");
+}
+
+export function getAnalyticsActions(): Promise<AnalyticsActions> {
+  return apiGet<AnalyticsActions>("/api/v1/analytics/actions");
+}
+
+export function getAnalyticsOutcomes(): Promise<AnalyticsOutcomes> {
+  return apiGet<AnalyticsOutcomes>("/api/v1/analytics/outcomes");
+}
+
+export function runRecoveryDemo(): Promise<RecoveryDemoResult> {
+  return apiPost<RecoveryDemoResult>("/api/v1/demo/recovery");
+}
+
+export function getRecoveryOutcomes(caseId: string): Promise<{ items: RecoveryOutcome[]; total: number }> {
+  return apiGet<{ items: RecoveryOutcome[]; total: number }>(`/api/v1/outcomes/cases/${caseId}`);
 }
 
 export function analyzeRecovery(): Promise<AnalyzeResponse> {

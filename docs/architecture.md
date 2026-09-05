@@ -1,6 +1,6 @@
 # R.AI Architecture
 
-R.AI is an autonomous revenue recovery platform for merchants. Sprint 4 adds bounded execution behind a deterministic Policy Engine.
+R.AI is an autonomous revenue recovery platform for merchants. Sprint 5 adds observable outcomes and evaluation behind the existing deterministic Policy Engine.
 
 ## Operating Model
 
@@ -10,6 +10,8 @@ R.AI Orchestrator (recommendation only)
 -> Approval gate (when required)
 -> Action Executor
 -> Payment Provider (mock | Razorpay Test Mode)
+-> Outcome Observation
+-> Evaluation and Analytics
 -> Audit
 ```
 
@@ -25,6 +27,10 @@ The Policy Engine is application code. The Action Executor is the only module al
 - `apps/api/app/actions`: Action Executor and idempotency fingerprints
 - `apps/api/app/payment_providers`: mock and Razorpay adapters
 - `apps/api/app/audit`: append-only audit records
+- `apps/api/app/outcomes`: normalized, idempotent provider outcome records
+- `apps/api/app/evaluation`: deterministic baseline versus R.AI comparison
+- `apps/api/app/analytics`: operational and evaluation metrics
+- `apps/api/app/demo`: mock-only end-to-end journey
 
 ## Data Model (Sprint 4 additions)
 
@@ -48,3 +54,11 @@ Supported operations: create Payment Link, notify Payment Link, fetch payment, f
 Not supported: generic retry charge, refunds, transfers, discounts, settlements.
 
 Details: `docs/payment-execution.md` and `docs/policy-engine.md`.
+
+## Outcomes and evaluation
+
+One-time recovery uses documented Payment Links. The mock provider can simulate a paid Payment Link for demos; Razorpay integration remains test-mode and uses documented fetches only. Subscription recovery is provider-managed/deferred rather than an invented retry-charge API.
+
+Outcome writes are fingerprinted for idempotency and update the recovery case lifecycle. A successful provider operation remains `Executed` until observation reports `paid`; only then is revenue marked recovered. Audit records capture recommendation, policy, execution, approval, provider, and outcome events.
+
+The evaluation harness applies a deterministic synthetic model to the same stored cases for baseline and R.AI recommendations. Recovery lift is `(R.AI recoverable revenue - baseline recoverable revenue) / baseline recoverable revenue`; it is not a settlement or production-performance claim.
