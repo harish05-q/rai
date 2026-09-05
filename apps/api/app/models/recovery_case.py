@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from app.models.audit_log import AuditLog
     from app.models.merchant import Merchant
     from app.models.payment import Payment
+    from app.models.recovery_outcome import RecoveryOutcome
 
 
 class RecoveryCase(Base):
@@ -45,6 +46,9 @@ class RecoveryCase(Base):
     eligibility: Mapped[str] = mapped_column(String(16), nullable=False)
     suggested_action: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
+    lifecycle_status: Mapped[str] = mapped_column(String(32), nullable=False, default="open")
+    recovered_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    latest_outcome_status: Mapped[str | None] = mapped_column(String(32), nullable=True)
     explanation_factors: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -74,6 +78,10 @@ class RecoveryCase(Base):
         cascade="all, delete-orphan",
     )
     audit_logs: Mapped[list["AuditLog"]] = relationship(
+        back_populates="recovery_case",
+        cascade="all, delete-orphan",
+    )
+    outcomes: Mapped[list["RecoveryOutcome"]] = relationship(
         back_populates="recovery_case",
         cascade="all, delete-orphan",
     )

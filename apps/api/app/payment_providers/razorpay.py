@@ -198,3 +198,22 @@ class RazorpayPaymentProvider:
         if not isinstance(data, dict):
             raise ProviderResponseError("Razorpay response was not an object")
         return data
+
+    def observe_payment_link(self, provider_reference: str) -> ProviderResult:
+        """Documented Payment Link fetch: GET /v1/payment_links/{id}."""
+
+        data = self._request("GET", f"/v1/payment_links/{provider_reference}")
+        link_id = data.get("id")
+        short_url = data.get("short_url")
+        return ProviderResult(
+            provider=self.name,
+            mock=False,
+            operation="observe_payment_link",
+            status=str(data.get("status") or "unknown"),
+            provider_reference=link_id if isinstance(link_id, str) else provider_reference,
+            payment_link_url=short_url if isinstance(short_url, str) else None,
+            notification_status=None,
+            message="Fetched Razorpay Payment Link status in test mode.",
+            occurred_at=datetime.now(timezone.utc),
+            details={"status": data.get("status"), "amount_paid": data.get("amount_paid")},
+        )

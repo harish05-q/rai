@@ -125,3 +125,37 @@ class RecoveryWorkflow(StrEnum):
     PAYMENT_LINK = "payment_link"
     SUBSCRIPTION_PROVIDER_MANAGED = "subscription_provider_managed"
     APPROVAL_CASE = "approval_case"
+
+
+class OutcomeStatus(StrEnum):
+    PENDING = "pending"
+    CREATED = "created"
+    SENT = "sent"
+    OPENED = "opened"
+    PAID = "paid"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+    UNKNOWN = "unknown"
+
+
+class OutcomeSource(StrEnum):
+    EXECUTION = "execution"
+    PROVIDER_OBSERVATION = "provider_observation"
+    MOCK_SIMULATION = "mock_simulation"
+    DEMO = "demo"
+    MANUAL = "manual"
+
+
+class RecoveryLifecycle(StrEnum):
+    OPEN = "open"
+    RECOMMENDED = "recommended"
+    BLOCKED = "blocked"
+    APPROVED = "approved"
+    EXECUTING = "executing"
+    EXECUTED = "executed"
+    PENDING = "pending"
+    RECOVERED = "recovered"
+    FAILED = "failed"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"

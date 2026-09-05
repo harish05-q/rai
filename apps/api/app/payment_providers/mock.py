@@ -1,7 +1,11 @@
 from datetime import datetime, timezone
+from hashlib import sha256
 
 from app.payment_providers.exceptions import PaymentProviderError, ProviderTimeoutError
 from app.payment_providers.types import PaymentLinkRequest, ProviderResult
+
+PAID_PATH = ("created", "sent", "opened", "paid")
+EXPIRED_PATH = ("created", "expired")
 
 
 class MockPaymentProvider:
@@ -10,10 +14,13 @@ class MockPaymentProvider:
     name = "mock"
     mock = True
 
-    def __init__(self, *, force_error: bool = False, force_timeout: bool = False) -> None:
+    def __init__(self, *, force_error: bool = False, force_timeout: bool = False, force_paid: bool = False) -> None:
         self.force_error = force_error
         self.force_timeout = force_timeout
+        self.force_paid = force_paid
         self.created_links: dict[str, ProviderResult] = {}
+        self._link_index: dict[str, int] = {}
+        self._link_path: dict[str, tuple[str, ...]] = {}
 
     def create_payment_link(self, request: PaymentLinkRequest) -> ProviderResult:
         self._maybe_fail("create_payment_link")
@@ -39,6 +46,8 @@ class MockPaymentProvider:
             },
         )
         self.created_links[reference] = result
+        self._link_path[reference] = self._simulation_path(reference)
+        self._link_index[reference] = 0
         return result
 
     def send_payment_link_notification(self, provider_reference: str, medium: str) -> ProviderResult:
@@ -117,6 +126,89 @@ class MockPaymentProvider:
             occurred_at=datetime.now(timezone.utc),
             details={"id": subscription_id, "status": "past_due"},
         )
+
+    def observe_payment_link(self, provider_reference: str) -> ProviderResult:
+        """Return the current simulated Payment Link state without advancing."""
+
+        self._maybe_fail("observe_payment_link")
+        status = self._current_status(provider_reference)
+        return self._link_result(
+            provider_reference,
+            operation="observe_payment_link",
+            status=status,
+            message="Mock Payment Link observation. This is not a Razorpay operation.",
+        )
+
+    def simulate_payment_link_outcome(self, provider_reference: str) -> ProviderResult:
+        """Advance one deterministic lifecycle step (created → opened/sent → paid, or expired)."""
+
+        self._maybe_fail("simulate_payment_link_outcome")
+        path = self._path_for(provider_reference)
+        index = self._link_index.get(provider_reference, 0)
+        if index < len(path) - 1:
+            index += 1
+            self._link_index[provider_reference] = index
+        status = path[index]
+        return self._link_result(
+            provider_reference,
+            operation="simulate_payment_link_outcome",
+            status=status,
+            message=f"Mock Payment Link advanced to {status}. This is not a Razorpay operation.",
+        )
+
+    def simulate_until_terminal(self, provider_reference: str) -> ProviderResult:
+        result = self.observe_payment_link(provider_reference)
+        while result.status not in {"paid", "expired", "cancelled", "failed"}:
+            advanced = self.simulate_payment_link_outcome(provider_reference)
+            if advanced.status == result.status:
+                break
+            result = advanced
+        return result
+
+    def _path_for(self, provider_reference: str) -> tuple[str, ...]:
+        if provider_reference not in self._link_path:
+            self._link_path[provider_reference] = self._simulation_path(provider_reference)
+            self._link_index.setdefault(provider_reference, 0)
+        return self._link_path[provider_reference]
+
+    def _current_status(self, provider_reference: str) -> str:
+        path = self._path_for(provider_reference)
+        index = self._link_index.get(provider_reference, 0)
+        return path[min(index, len(path) - 1)]
+
+    def _link_result(
+        self,
+        provider_reference: str,
+        *,
+        operation: str,
+        status: str,
+        message: str,
+    ) -> ProviderResult:
+        created = self.created_links.get(provider_reference)
+        return ProviderResult(
+            provider=self.name,
+            mock=True,
+            operation=operation,
+            status=status,
+            provider_reference=provider_reference,
+            payment_link_url=f"https://mock.razorpay.invalid/{provider_reference}",
+            notification_status="sent" if status in {"sent", "opened", "paid"} else None,
+            message=message,
+            occurred_at=datetime.now(timezone.utc),
+            details={
+                "path": list(self._path_for(provider_reference)),
+                "index": self._link_index.get(provider_reference, 0),
+                "original_status": created.status if created else None,
+            },
+        )
+
+    def _simulation_path(self, provider_reference: str) -> tuple[str, ...]:
+        if self.force_paid:
+            return PAID_PATH
+        digest = int(sha256(provider_reference.encode("utf-8")).hexdigest(), 16)
+        if digest % 10 < 7:
+            return PAID_PATH
+        return EXPIRED_PATH
 
     def _maybe_fail(self, operation: str) -> None:
         if self.force_timeout:

@@ -16,7 +16,9 @@ from app.models.enums import (
     ApprovalStatus,
     AuditActor,
     ExecutionStatus,
+    OutcomeSource,
     PolicyOutcome,
+    RecoveryLifecycle,
     RecoveryWorkflow,
     SuggestedAction,
 )
@@ -29,6 +31,7 @@ from app.policies.constants import APPROVAL_TTL_HOURS
 from app.policies.engine import PolicyDecision, PolicyEvaluationInput, evaluate_policy
 from app.policies.mapping import has_recoverable_subscription, map_recovery_workflow
 from app.policies.service import get_or_create_merchant_policy, policy_snapshot
+from app.outcomes.service import OutcomeService
 
 ACTIVE_EXECUTION_STATUSES = {
     ExecutionStatus.SUCCEEDED,
@@ -63,6 +66,7 @@ class ActionExecutor:
         self.session = session
         self.provider = provider or get_payment_provider()
         self.audit = AuditService(session)
+        self.outcomes = OutcomeService(session, provider=self.provider)
 
     def preview(self, case_id: UUID) -> dict:
         case, decision, policy, evaluation = self._prepare(case_id)
@@ -155,6 +159,7 @@ class ActionExecutor:
                 status=ExecutionStatus.BLOCKED,
             )
             self.session.flush()
+            case.lifecycle_status = RecoveryLifecycle.BLOCKED.value
             blocked_audit = self.audit.record(
                 actor=AuditActor.SYSTEM,
                 source="policy",
@@ -278,8 +283,9 @@ class ActionExecutor:
         )
 
         # human_review is a review workflow, not a provider-executable action.
-        if evaluation.workflow == RecoveryWorkflow.NONE:
+        if evaluation.workflow in {RecoveryWorkflow.NONE.value, RecoveryWorkflow.APPROVAL_CASE.value}:
             execution.completed_at = datetime.now(timezone.utc)
+            case.lifecycle_status = RecoveryLifecycle.APPROVED.value
             self.session.commit()
             self.session.refresh(execution)
 
@@ -315,6 +321,9 @@ class ActionExecutor:
         approval.resolution_note = note
         execution.status = ExecutionStatus.CANCELLED.value
         execution.completed_at = datetime.now(timezone.utc)
+        case = self._load_case(approval.recovery_case_id)
+        if case.lifecycle_status != RecoveryLifecycle.RECOVERED.value:
+            case.lifecycle_status = RecoveryLifecycle.CANCELLED.value
         audit = self.audit.record(
             actor=AuditActor.MERCHANT,
             source="approval",

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import actions, agent, approvals, audit, health, payments, policies, recovery
+from app.api.routes import actions, agent, analytics, approvals, audit, demo, health, outcomes, payments, policies, recovery
 from app.core.logging import configure_logging
 
 configure_logging()
@@ -22,3 +22,6 @@ app.include_router(policies.router)
 app.include_router(actions.router)
 app.include_router(approvals.router)
 app.include_router(audit.router)
+app.include_router(analytics.router)
+app.include_router(outcomes.router)
+app.include_router(demo.router)
