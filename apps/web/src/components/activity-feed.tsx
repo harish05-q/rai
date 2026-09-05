@@ -13,16 +13,23 @@ const iconByKind = {
   recovered: CheckCircle2
 };
 
-export function ActivityFeed({ items }: { items: ActivityItem[] }) {
+export function ActivityFeed({
+  items,
+  subtitle = "Mock events for dashboard layout validation."
+}: {
+  items: ActivityItem[];
+  subtitle?: string;
+}) {
   return (
     <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-ink">AI Recovery Activity</h2>
-          <p className="mt-1 text-sm text-ink/60">Mock events for dashboard layout validation.</p>
+          <p className="mt-1 text-sm text-ink/60">{subtitle}</p>
         </div>
       </div>
       <div className="mt-5 space-y-4">
+        {items.length === 0 ? <p className="text-sm text-ink/60">No recovery activity yet.</p> : null}
         {items.map((item) => {
           const Icon = iconByKind[item.kind];
           return (

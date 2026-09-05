@@ -1,104 +1,44 @@
 # R.AI
 
-R.AI is a Revenue AI foundation for merchant revenue intelligence and recovery. Sprint 1 establishes the production-grade monorepo base only: frontend shell, backend service, PostgreSQL persistence, migrations, tests, Docker Compose, and documentation.
+R.AI is a Revenue AI platform for merchant revenue intelligence and recovery. Sprint 2 adds deterministic payment and recovery intelligence on top of the Sprint 1 foundation.
 
-No Razorpay calls, real payment execution, LLM calls, autonomous recovery, notifications, or production authentication are implemented in this sprint.
+No Razorpay calls, real payment execution, LLM calls, or autonomous recovery actions are implemented.
 
 ## Architecture Overview
 
 ```text
-apps/web  -> Next.js dashboard and operations shell
-apps/api  -> FastAPI service, configuration, database models, migrations
-postgres  -> PostgreSQL persistence for application data
-docs      -> Architecture notes and sprint documentation
+apps/web  -> Next.js dashboard (payments, recovery, summary KPIs)
+apps/api  -> FastAPI service, domain models, recovery intelligence
+postgres  -> PostgreSQL persistence
+docs      -> Architecture, project context, scoring notes
+scripts   -> Synthetic data generation and demo seed
 ```
 
-The backend owns persistence and health checks. The frontend consumes backend APIs through a centralized API client so future product data can move behind typed service boundaries without scattering `fetch` calls through UI components.
+The frontend consumes backend APIs only through `apps/web/src/lib/api-client.ts`.
 
-## Repository Structure
+## Synthetic data
 
-```text
-apps/
-  api/
-    alembic/
-    app/
-    tests/
-  web/
-    src/
-data/
-  raw/
-  generated/
-  evaluation/
-docs/
-scripts/
-docker-compose.yml
-```
+All generated customers are fake (`@example.invalid`). Generation uses a fixed seed.
 
-## Prerequisites
-
-- Node.js 22+
-- npm 10+
-- Python 3.12+
-- Docker Desktop with Docker Compose
-- PostgreSQL for local non-Docker database runs
-
-## Environment Setup
-
-Copy the example environment file and adjust values for your machine:
+From the repository root (API dependencies installed, `DATABASE_URL` set):
 
 ```bash
-cp .env.example .env
+python scripts/generate_data.py --seed 42 --customers 1000 --payments 10000
+python scripts/seed_demo.py
 ```
 
-For local development outside Docker, set `DATABASE_URL` to a PostgreSQL database reachable from your host, for example:
+`seed_demo.py` generates data and runs deterministic recovery analysis. It does not execute payments.
 
-```text
-DATABASE_URL=postgresql+psycopg://rai:rai_dev_password@localhost:5432/rai
-```
-
-Do not commit real secrets or credentials.
-
-## Running Locally
-
-Install frontend dependencies:
+In Docker, after migrations:
 
 ```bash
-cd apps/web
-npm install
-npm run dev
+docker compose exec api python -m app.data.seed
 ```
 
-Install backend dependencies:
+## Running migrations
 
 ```bash
 cd apps/api
-py -3.12 -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
-
-The web app runs at `http://localhost:3000`. The API runs at `http://localhost:8000`.
-
-## Running With Docker Compose
-
-From the repository root:
-
-```bash
-docker compose up --build
-```
-
-Services:
-
-- `web`: Next.js app on `http://localhost:3000`
-- `api`: FastAPI app on `http://localhost:8000`
-- `postgres`: PostgreSQL with persistent volume `postgres_data`
-
-## Running Migrations
-
-Inside `apps/api` with dependencies installed:
-
-```bash
 alembic upgrade head
 ```
 
@@ -108,18 +48,22 @@ In Docker:
 docker compose run --rm api alembic upgrade head
 ```
 
-The initial migration creates the `merchants` table with UUID primary keys and timezone-aware timestamps.
+Sprint 1 created `merchants`. Sprint 2 adds `customers`, `payments`, `payment_failures`, `subscriptions`, and `recovery_cases`.
+
+## API
+
+- `GET /health`
+- `GET /api/v1/payments`
+- `GET /api/v1/recovery/cases`
+- `GET /api/v1/recovery/summary`
+- `POST /api/v1/recovery/analyze` — scores failed payments; never charges or retries
 
 ## Testing
-
-Backend:
 
 ```bash
 cd apps/api
 pytest
 ```
-
-Frontend:
 
 ```bash
 cd apps/web
@@ -127,21 +71,17 @@ npm run lint
 npm run typecheck
 ```
 
-## Current Sprint 1 Scope
+Scoring formula and eligibility rules: `docs/recovery-intelligence.md`. Agent handoff: `docs/PROJECT_CONTEXT.md`.
 
-Implemented in this sprint:
+## Current Sprint 2 scope
 
-- Monorepo structure
-- Next.js TypeScript frontend with App Router and Tailwind CSS
-- FastAPI backend
-- PostgreSQL configuration
-- Docker Compose
-- Environment configuration
-- Initial Merchant model and Alembic migration
-- Health endpoint
-- Initial dashboard shell with mock data
-- Backend tests and frontend static checks
-- Developer documentation
+Implemented:
+
+- Customer, Payment, PaymentFailure, Subscription, RecoveryCase models
+- Deterministic recoverability scoring, eligibility, and baseline suggested actions
+- Idempotent recovery-case analysis
+- Synthetic dataset (1,000 customers / 10,000 payments)
+- Dashboard, Payments, and Recovery pages backed by the API
 
 Explicitly out of scope:
 
@@ -149,16 +89,13 @@ Explicitly out of scope:
 - Real payment execution
 - Autonomous agents
 - LLM integration
-- Recovery algorithms
 - Fraud detection
 - Advanced analytics
 - Production authentication
 - Notifications
 - Billing
 
-## Planned Future Architecture
-
-Future sprints can evolve toward:
+## Planned future architecture
 
 ```text
 R.AI Orchestrator
@@ -170,4 +107,4 @@ R.AI Orchestrator
 -> Audit
 ```
 
-The LLM will never have unrestricted authority over payment operations. It may propose actions in a future sprint; deterministic application code must decide whether an action is permitted.
+The LLM will never have unrestricted authority over payment operations.
