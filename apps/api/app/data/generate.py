@@ -16,6 +16,10 @@ from random import Random
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.models.action_execution import ActionExecution
+from app.models.ai_decision import AIDecision
+from app.models.approval_request import ApprovalRequest
+from app.models.audit_log import AuditLog
 from app.models.customer import Customer
 from app.models.enums import (
     FailureCategory,
@@ -29,6 +33,7 @@ from app.models.payment_failure import PaymentFailure
 from app.models.recovery_case import RecoveryCase
 from app.models.subscription import Subscription
 from app.recovery.service import RecoveryAnalysisService
+from app.policies.service import apply_demo_guardrails, get_or_create_merchant_policy
 
 DEMO_MERCHANT_EMAIL = "demo@rai.example"
 DEMO_MERCHANT_NAME = "R.AI Demo Merchant"
@@ -90,6 +95,8 @@ def generate_synthetic_dataset(
 ) -> dict[str, int]:
     rng = Random(seed)
     merchant = _ensure_merchant(session)
+    policy = get_or_create_merchant_policy(session, merchant.id)
+    apply_demo_guardrails(policy)
     if reset:
         _reset_merchant_data(session, merchant.id)
 
@@ -142,6 +149,11 @@ def _ensure_merchant(session: Session) -> Merchant:
 
 
 def _reset_merchant_data(session: Session, merchant_id: uuid.UUID) -> None:
+    case_ids = select(RecoveryCase.id).where(RecoveryCase.merchant_id == merchant_id)
+    session.execute(delete(AuditLog).where(AuditLog.recovery_case_id.in_(case_ids)))
+    session.execute(delete(ApprovalRequest).where(ApprovalRequest.recovery_case_id.in_(case_ids)))
+    session.execute(delete(ActionExecution).where(ActionExecution.recovery_case_id.in_(case_ids)))
+    session.execute(delete(AIDecision).where(AIDecision.recovery_case_id.in_(case_ids)))
     payment_ids = select(Payment.id).where(Payment.merchant_id == merchant_id)
     session.execute(delete(RecoveryCase).where(RecoveryCase.merchant_id == merchant_id))
     session.execute(delete(PaymentFailure).where(PaymentFailure.payment_id.in_(payment_ids)))

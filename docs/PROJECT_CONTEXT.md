@@ -20,108 +20,86 @@ The LLM must never have unrestricted authority over payment operations. The Poli
 
 ## Current sprint
 
-**Sprint 2 — Payment & Recovery Intelligence** (in progress at the time this file was created; update the completed-state section after verification).
+**Sprint 4 — Guardrails + Action Execution + Razorpay integration** is complete.
 
-Sprint 1 foundation is already implemented and must not be rebuilt.
+Sprints 1–3 remain in place and were not rebuilt.
 
-## Completed Sprint 1 functionality
+Do not start Sprint 5 automatically.
 
-- Monorepo layout (`apps/web`, `apps/api`, `docs`, `scripts`, `data`)
-- Next.js App Router frontend with Tailwind dashboard shell
-- FastAPI backend with health endpoint
-- PostgreSQL, SQLAlchemy 2.x, Alembic
-- Merchant model and initial migration
-- Docker Compose for web, api, and postgres
-- Centralized frontend API client
-- Backend tests and frontend lint/typecheck scripts
-- README and architecture documentation
+## Completed functionality
 
-Sprint 1 dashboard Payments/Recovery routes were shells with mock or placeholder content.
+### Sprint 1
+
+- Monorepo, Next.js, FastAPI, PostgreSQL, Docker Compose, Merchant, health, dashboard shell
+
+### Sprint 2
+
+- Customers, payments, failures, subscriptions, recovery cases
+- Deterministic scoring/eligibility/suggested actions
+- Synthetic data and recovery APIs
+
+### Sprint 3
+
+- Structured R.AI recommendations (`AIDecision`)
+- Mock and optional live LLM providers
+- Recommendation-only agent APIs and UI
+- Immutable analysis history; comparison with baseline
+
+### Sprint 4
+
+- Deterministic Policy Engine (`apps/api/app/policies`)
+- MerchantPolicy guardrails
+- ActionExecutor (`apps/api/app/actions`) — the only path to provider calls
+- ApprovalRequest workflow
+- Append-only AuditLog
+- MockPaymentProvider and RazorpayPaymentProvider (documented Payment Links / fetches)
+- Execute, approvals, actions, audit, and policy APIs
+- Recovery detail execution UI, Approval Center, real Audit page, Settings guardrails, dashboard execution KPIs
 
 ## Current technology stack
 
 - Frontend: Next.js, TypeScript, App Router, Tailwind CSS
-- Backend: Python 3.12+, FastAPI, Pydantic, SQLAlchemy 2.x, Alembic
+- Backend: Python 3.12+, FastAPI, Pydantic, SQLAlchemy 2.x, Alembic, httpx
 - Database: PostgreSQL 16
 - Infrastructure: Docker, Docker Compose
 
-## Repository structure
-
-```text
-apps/web          Next.js operations UI
-apps/api          FastAPI service, models, migrations, tests
-apps/api/app/recovery   Deterministic recovery intelligence (Sprint 2)
-data              Raw / generated / evaluation datasets
-docs              Architecture and agent handoff
-scripts           Developer workflows (seed/generate)
-```
-
 ## Important architectural decisions
 
-- Layering: API routes stay thin; domain logic lives in services/recovery modules.
+- Layering: API routes stay thin; policy, execution, and provider logic stay out of routes.
 - Frontend data access goes through `apps/web/src/lib/api-client.ts`.
 - UUID primary keys and timezone-aware timestamps.
-- Payment-provider integrations stay behind an abstraction when they exist; Sprint 2 has no provider.
-- Mock and test behavior must work without external credentials.
+- Payment-provider integrations are behind `apps/api/app/payment_providers`.
+- There is no `retry_payment()` provider method. One-time recovery uses Payment Links. Subscription recovery is provider-managed/deferred.
+- Mock mode (`AI_MODE=mock`, `PAYMENT_PROVIDER=mock`) runs the full workflow without credentials.
+- Live Razorpay keys must be test-mode (`rzp_test_`). Live keys are rejected.
 
 ## Important safety constraints
 
-- No real payment execution.
-- No Razorpay API calls in Sprint 2.
-- No LLM or agent framework in Sprint 2.
-- No autonomous payment actions.
-- Future LLM proposals must be validated by deterministic policy code before any action.
-- High-risk actions will require human approval in later sprints.
-- Never commit secrets.
+- The LLM cannot call the payment provider.
+- Routes cannot call provider methods directly.
+- Execute requests cannot override merchant policy via query or body.
+- Secrets are never sent to the frontend or written to audit/logs.
+- Unknown/unsupported operations are blocked.
 
 ## Current Docker / runtime setup
 
-Expected local ports:
+Expected local ports: frontend `3000`, backend `8000`, PostgreSQL `5432`.
 
-- Frontend: `3000`
-- Backend: `8000`
-- PostgreSQL: `5432`
+Copy `.env.example` to `.env`. Do not commit filled `.env` files with secrets.
 
-Compose services: `web`, `api`, `postgres` (volume `postgres_data`).
+## What remains to be built (after Sprint 4)
 
-API health: `GET /health`.
-
-Copy `.env.example` to `.env` for local overrides. Do not commit filled `.env` files with secrets.
-
-## What remains to be built (after Sprint 2)
-
-- LLM-assisted diagnosis and strategy (bounded, structured, validated)
-- Deterministic policy engine with approval gates
-- Bounded action executor
-- Payment provider abstraction and Razorpay test-mode integration
-- Audit trail for autonomous actions
+- Outcome observation / webhook handling for Payment Link paid events
 - Evaluation harness
-- Production authentication, notifications, billing, fraud detection, advanced analytics
-
-## Sprint 2 objective
-
-Build the deterministic data and domain substrate for future AI agents:
-
-- Customer, Payment, PaymentFailure, Subscription, RecoveryCase models
-- Alembic migration
-- Deterministic synthetic data generation
-- Recoverability scoring, eligibility, suggested actions
-- Idempotent recovery-case analysis
-- Payments, recovery cases, summary, and analyze APIs
-- Dashboard / Payments / Recovery pages backed by real API data
-- Meaningful automated tests
-
-Explicitly out of scope for Sprint 2: LLM, agents, Razorpay, real charges, autonomous retries.
+- Production authentication, notifications product, billing, fraud detection, advanced analytics
+- Richer subscription lifecycle if Razorpay documents additional recovery APIs
 
 ## Future sprint roadmap
 
-Recommended next sprint only after Sprint 2 is complete:
+Recommended next sprint only after an explicit request:
 
-**Sprint 3 — Diagnosis & policy foundation (no execution)**
+**Sprint 5 — Outcome observation and evaluation**
 
-- Structured diagnosis records for failed payments
-- Deterministic policy engine (retry limits, high-value thresholds, approval requirements, stop conditions, idempotency keys)
-- Compare baseline strategy vs a future AI-proposed strategy without executing payments
-- Audit log schema for proposed vs permitted actions
-
-Later sprints can add provider tools, bounded execution in test mode, evaluation, and operator approval workflows.
+- Payment Link / subscription status observation
+- Recovery outcome recording
+- Evaluation of recommendation vs execution vs collection

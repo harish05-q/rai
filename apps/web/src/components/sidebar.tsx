@@ -6,7 +6,8 @@ import {
   Gauge,
   RotateCcw,
   ScrollText,
-  Settings
+  Settings,
+  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 
@@ -14,6 +15,7 @@ const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
   { href: "/payments", label: "Payments", icon: CreditCard },
   { href: "/recovery", label: "Recovery", icon: RotateCcw },
+  { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/agent", label: "Agent", icon: Bot },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/audit", label: "Audit", icon: ScrollText },
@@ -55,8 +57,8 @@ export function Sidebar({ pathname }: { pathname: string }) {
         </nav>
 
         <div className="mt-auto rounded-lg border border-line bg-field p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/50">Sprint 3</p>
-          <p className="mt-2 text-sm leading-6 text-ink/70">Recommendation-only recovery intelligence. No payment execution.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/50">Sprint 4</p>
+          <p className="mt-2 text-sm leading-6 text-ink/70">Policy-bounded execution. The LLM cannot call the payment provider.</p>
         </div>
       </div>
     </aside>

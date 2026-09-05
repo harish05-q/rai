@@ -31,7 +31,6 @@ export function PaymentsTable() {
   const limit = 25;
 
   const load = useCallback(() => {
-    setState("loading");
     getPayments({
       status: status || undefined,
       payment_method: method || undefined,

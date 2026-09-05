@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 20.0
     agent_batch_max: int = 25
 
+    payment_provider: str = "mock"
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
+    razorpay_base_url: str = "https://api.razorpay.com"
+    razorpay_timeout_seconds: float = 10.0
+    mock_provider_force_error: bool = False
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

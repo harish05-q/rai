@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { StatusNotice } from "@/components/status-notice";
 import { analyzeRecovery, getRecoveryCases, type RecoveryCaseListItem } from "@/lib/api-client";
-import { formatDate, formatInr, formatLabel, formatScore } from "@/lib/format";
+import { formatInr, formatLabel, formatScore } from "@/lib/format";
 
 const STATUSES = ["", "open", "recovered", "resolved", "blocked"];
 const PRIORITIES = ["", "high", "medium", "low"];
@@ -26,7 +26,6 @@ export function RecoveryQueue() {
   const limit = 25;
 
   const load = useCallback(() => {
-    setState("loading");
     getRecoveryCases({
       status: status || undefined,
       priority: priority || undefined,

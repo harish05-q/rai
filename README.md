@@ -1,16 +1,16 @@
 # R.AI
 
-R.AI is a Revenue AI platform for merchant revenue intelligence and recovery. Sprint 2 adds deterministic payment and recovery intelligence on top of the Sprint 1 foundation.
+R.AI is a Revenue AI platform for merchant revenue intelligence and recovery. Sprint 4 adds policy-bounded execution (Payment Links and provider-managed subscription recovery) on top of Sprints 1–3.
 
-No Razorpay calls, real payment execution, LLM calls, or autonomous recovery actions are implemented.
+The LLM never executes payment-provider operations. The Policy Engine is deterministic application code.
 
 ## Architecture Overview
 
 ```text
-apps/web  -> Next.js dashboard (payments, recovery, summary KPIs)
-apps/api  -> FastAPI service, domain models, recovery intelligence
+apps/web  -> Next.js dashboard (recovery, approvals, audit, settings)
+apps/api  -> FastAPI: recovery, agent, policy, actions, providers
 postgres  -> PostgreSQL persistence
-docs      -> Architecture, project context, scoring notes
+docs      -> Architecture, policy, payment execution
 scripts   -> Synthetic data generation and demo seed
 ```
 
@@ -20,20 +20,18 @@ The frontend consumes backend APIs only through `apps/web/src/lib/api-client.ts`
 
 All generated customers are fake (`@example.invalid`). Generation uses a fixed seed.
 
-From the repository root (API dependencies installed, `DATABASE_URL` set):
-
 ```bash
 python scripts/generate_data.py --seed 42 --customers 1000 --payments 10000
 python scripts/seed_demo.py
 ```
-
-`seed_demo.py` generates data and runs deterministic recovery analysis. It does not execute payments.
 
 In Docker, after migrations:
 
 ```bash
 docker compose exec api python -m app.data.seed
 ```
+
+Demo seed enables tightly scoped autonomous execution so low-value Payment Link recovery can be demonstrated in mock mode.
 
 ## Running migrations
 
@@ -48,15 +46,16 @@ In Docker:
 docker compose run --rm api alembic upgrade head
 ```
 
-Sprint 1 created `merchants`. Sprint 2 adds `customers`, `payments`, `payment_failures`, `subscriptions`, and `recovery_cases`.
+## API (Sprint 4 additions)
 
-## API
+- `GET /api/v1/policies` / `PUT /api/v1/policies`
+- `GET /api/v1/policies/evaluate/{case_id}`
+- `POST /api/v1/recovery/cases/{case_id}/execute`
+- `GET /api/v1/actions` / `GET /api/v1/actions/{id}` / `GET /api/v1/actions/summary`
+- `GET /api/v1/approvals` / `POST .../approve` / `POST .../reject`
+- `GET /api/v1/audit`
 
-- `GET /health`
-- `GET /api/v1/payments`
-- `GET /api/v1/recovery/cases`
-- `GET /api/v1/recovery/summary`
-- `POST /api/v1/recovery/analyze` — scores failed payments; never charges or retries
+Existing health, payments, recovery, and agent endpoints remain.
 
 ## Testing
 
@@ -71,40 +70,28 @@ npm run lint
 npm run typecheck
 ```
 
-Scoring formula and eligibility rules: `docs/recovery-intelligence.md`. Agent handoff: `docs/PROJECT_CONTEXT.md`.
+Automated tests use `PAYMENT_PROVIDER=mock` and do not require Razorpay credentials.
 
-## Current Sprint 2 scope
+## Configuration
 
-Implemented:
+Default `.env.example`:
 
-- Customer, Payment, PaymentFailure, Subscription, RecoveryCase models
-- Deterministic recoverability scoring, eligibility, and baseline suggested actions
-- Idempotent recovery-case analysis
-- Synthetic dataset (1,000 customers / 10,000 payments)
-- Dashboard, Payments, and Recovery pages backed by the API
+- `AI_MODE=mock`
+- `PAYMENT_PROVIDER=mock`
 
-Explicitly out of scope:
-
-- Razorpay integration
-- Real payment execution
-- Autonomous agents
-- LLM integration
-- Fraud detection
-- Advanced analytics
-- Production authentication
-- Notifications
-- Billing
-
-## Planned future architecture
+To attempt Razorpay Test Mode (optional):
 
 ```text
-R.AI Orchestrator
--> Diagnosis
--> Recovery Strategy
--> Deterministic Policy Engine
--> Bounded Action Executor
--> Payment Provider Tools
--> Audit
+PAYMENT_PROVIDER=razorpay
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
 ```
 
-The LLM will never have unrestricted authority over payment operations.
+Never put secrets in source control. Live keys are rejected.
+
+## Docs
+
+- Scoring: `docs/recovery-intelligence.md`
+- Policy: `docs/policy-engine.md`
+- Execution: `docs/payment-execution.md`
+- Agent handoff: `docs/PROJECT_CONTEXT.md`

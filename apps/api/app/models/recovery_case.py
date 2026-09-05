@@ -13,6 +13,9 @@ from app.db.base import Base
 from app.models.ai_decision import AIDecision
 
 if TYPE_CHECKING:
+    from app.models.action_execution import ActionExecution
+    from app.models.approval_request import ApprovalRequest
+    from app.models.audit_log import AuditLog
     from app.models.merchant import Merchant
     from app.models.payment import Payment
 
@@ -59,6 +62,18 @@ class RecoveryCase(Base):
     merchant: Mapped[Merchant] = relationship(back_populates="recovery_cases")
     payment: Mapped[Payment] = relationship(back_populates="recovery_case")
     ai_decisions: Mapped[list[AIDecision]] = relationship(
+        back_populates="recovery_case",
+        cascade="all, delete-orphan",
+    )
+    action_executions: Mapped[list["ActionExecution"]] = relationship(
+        back_populates="recovery_case",
+        cascade="all, delete-orphan",
+    )
+    approval_requests: Mapped[list["ApprovalRequest"]] = relationship(
+        back_populates="recovery_case",
+        cascade="all, delete-orphan",
+    )
+    audit_logs: Mapped[list["AuditLog"]] = relationship(
         back_populates="recovery_case",
         cascade="all, delete-orphan",
     )

@@ -1,5 +1,12 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { Suspense } from "react";
+
+import { AuditTimeline } from "@/components/audit-timeline";
+import { StatusNotice } from "@/components/status-notice";
 
 export default function AuditPage() {
-  return <PlaceholderPage title="Audit" description="Audit trails will be added with bounded action execution." />;
+  return (
+    <Suspense fallback={<StatusNotice title="Loading audit" description="Preparing the execution timeline." />}>
+      <AuditTimeline />
+    </Suspense>
+  );
 }

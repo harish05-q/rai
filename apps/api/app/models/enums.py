@@ -86,3 +86,42 @@ class StrategyTiming(StrEnum):
 class ComparisonStatus(StrEnum):
     ALIGNED = "aligned"
     DIFFERS = "differs"
+
+
+class PolicyOutcome(StrEnum):
+    ALLOW = "allow"
+    REQUIRE_APPROVAL = "require_approval"
+    BLOCK = "block"
+
+
+class ExecutionStatus(StrEnum):
+    PROPOSED = "proposed"
+    BLOCKED = "blocked"
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    EXECUTING = "executing"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    DUPLICATE = "duplicate"
+
+
+class ApprovalStatus(StrEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXPIRED = "expired"
+
+
+class AuditActor(StrEnum):
+    AI = "ai"
+    MERCHANT = "merchant"
+    SYSTEM = "system"
+    RAZORPAY = "razorpay"
+
+
+class RecoveryWorkflow(StrEnum):
+    NONE = "none"
+    PAYMENT_LINK = "payment_link"
+    SUBSCRIPTION_PROVIDER_MANAGED = "subscription_provider_managed"
+    APPROVAL_CASE = "approval_case"

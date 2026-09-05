@@ -1,43 +1,50 @@
 # R.AI Architecture
 
-R.AI is intended to become an autonomous revenue recovery platform for merchants. Sprint 1 established the foundation. Sprint 2 adds the deterministic payment and recovery domain used as a baseline for future AI strategy.
+R.AI is an autonomous revenue recovery platform for merchants. Sprint 4 adds bounded execution behind a deterministic Policy Engine.
 
-## Future Operating Model
+## Operating Model
 
 ```text
-R.AI Orchestrator
--> Diagnosis
--> Strategy
--> Policy Engine
+R.AI Orchestrator (recommendation only)
+-> Deterministic Policy Engine
+-> Approval gate (when required)
 -> Action Executor
--> Payment Provider
+-> Payment Provider (mock | Razorpay Test Mode)
 -> Audit
 ```
 
-The Policy Engine must remain deterministic application code. The Action Executor must be bounded by policy, idempotency, approval requirements, and stopping conditions.
-
-**The LLM will never have unrestricted authority over payment operations.**
-
-## Sprint 2 Boundaries
-
-Sprint 2 does not include Razorpay integration, payment execution, autonomous retries, LLM calls, fraud detection, advanced analytics, notifications, billing, or production authentication.
-
-`POST /api/v1/recovery/analyze` only writes recovery cases. It must never call a payment provider.
+The Policy Engine is application code. The Action Executor is the only module allowed to call a payment provider. The LLM never authorizes or executes payment operations.
 
 ## Current Components
 
-- `apps/web`: Next.js App Router frontend. Dashboard, Payments, and Recovery read API data through the shared client.
-- `apps/api`: FastAPI application with Merchant plus payment/recovery models, recovery intelligence, and list/analyze endpoints.
-- `apps/api/app/recovery`: scoring, eligibility, constants, and analysis service.
-- `postgres`: PostgreSQL database used by Docker Compose.
+- `apps/web`: operations UI (dashboard, payments, recovery, approvals, agent, audit, settings)
+- `apps/api`: FastAPI service
+- `apps/api/app/recovery`: deterministic scoring and cases
+- `apps/api/app/agents`: recommendation layer
+- `apps/api/app/policies`: Policy Engine and merchant guardrails
+- `apps/api/app/actions`: Action Executor and idempotency fingerprints
+- `apps/api/app/payment_providers`: mock and Razorpay adapters
+- `apps/api/app/audit`: append-only audit records
 
-## Data Model
+## Data Model (Sprint 4 additions)
 
-- `Merchant`: Sprint 1 tenant record
-- `Customer`: merchant-scoped synthetic payer with payment aggregates
-- `Payment`: amount, method, status, attempt, checkout flags
-- `PaymentFailure`: failure code, category, message, occurred_at
-- `Subscription`: plan, amount, status, next billing
-- `RecoveryCase`: one case per payment (unique `payment_id`), score, eligibility, suggested action, status
+- `MerchantPolicy`: per-merchant execution guardrails
+- `ActionExecution`: one attempted/completed bounded action, with request fingerprint
+- `ApprovalRequest`: human gate for `require_approval`
+- `AuditLog`: append-only events (recommendation, policy, approval, provider)
 
-UUID primary keys and timezone-aware timestamps are used throughout. Scoring details are in `docs/recovery-intelligence.md`.
+Existing Sprint 1–3 models are unchanged in purpose.
+
+## Execution states
+
+`proposed`, `blocked`, `pending_approval`, `approved`, `executing`, `succeeded`, `failed`, `cancelled`, `duplicate`
+
+Policy outcomes are a separate field: `allow`, `require_approval`, `block`.
+
+## Provider boundary
+
+Supported operations: create Payment Link, notify Payment Link, fetch payment, fetch subscription, record provider-managed subscription recovery.
+
+Not supported: generic retry charge, refunds, transfers, discounts, settlements.
+
+Details: `docs/payment-execution.md` and `docs/policy-engine.md`.

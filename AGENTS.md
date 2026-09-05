@@ -24,37 +24,22 @@ The LLM must never have unrestricted authority over payment operations.
 
 ## Current Sprint Scope
 
-The current phase is Sprint 1: Foundation.
+Sprint 1–4 are complete. Do not start Sprint 5 automatically.
 
-Sprint 1 is limited to:
-
-- Monorepo structure
-- Next.js frontend
-- FastAPI backend
-- PostgreSQL
-- Docker Compose
-- Environment configuration
-- Basic database setup
-- Initial Merchant model
-- Health endpoint
-- Basic dashboard shell
-- Initial tests
-- Documentation
+Sprint 4 added a deterministic Policy Engine, human approval, a bounded Action
+Executor, mock and Razorpay Test Mode providers (Payment Links and documented
+fetches only), and append-only audit logs.
 
 Do not implement these features unless a later task explicitly asks for them:
 
-- Razorpay integration
-- Real payment execution
-- Autonomous agents
-- LLM integration
-- Recovery algorithms
-- Fraud detection
-- Advanced analytics
 - Production authentication
-- Notifications
+- Notifications products (beyond Payment Link notify)
 - Billing
+- Fraud detection products
+- Advanced analytics
+- Refunds, transfers, discounts, or invented retry-charge APIs
 
-Do not automatically continue into the next sprint.
+The LLM must never have unrestricted authority over payment operations.
 
 ## Target Structure
 

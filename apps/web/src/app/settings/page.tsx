@@ -1,5 +1,5 @@
-import { PlaceholderPage } from "@/components/placeholder-page";
+import { PolicySettings } from "@/components/policy-settings";
 
 export default function SettingsPage() {
-  return <PlaceholderPage title="Settings" description="Configuration surfaces will be added when policies and providers exist." />;
+  return <PolicySettings />;
 }

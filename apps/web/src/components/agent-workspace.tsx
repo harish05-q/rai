@@ -35,7 +35,6 @@ export function AgentWorkspace() {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
 
   const load = useCallback(() => {
-    setState("loading");
     Promise.all([
       getAgentStatus(),
       getAgentSummary(),

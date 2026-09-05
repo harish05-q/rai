@@ -1,3 +1,3 @@
-from app.api.routes import agent, health, payments, recovery
+from app.api.routes import actions, agent, approvals, audit, health, payments, policies, recovery
 
-__all__ = ["agent", "health", "payments", "recovery"]
+__all__ = ["actions", "agent", "approvals", "audit", "health", "payments", "policies", "recovery"]
