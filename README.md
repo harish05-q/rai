@@ -46,6 +46,22 @@
 
 ---
 
+## Screenshots
+
+### Dashboard
+![R.AI Dashboard](docs/screenshots/dashboard1.png) (docs/screenshots/dashboard2.png)
+
+### Recovery Flow
+![Recovery Lifecycle](docs/screenshots/recovery.png)
+
+### Agent
+![Agent](docs/screenshots/agent.png)
+
+### Analytics Overview
+![Analytics](docs/screenshots/analytics.png)
+
+
+
 ## 📚 Table of Contents
 
 - [Overview](#-overview)
