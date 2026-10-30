@@ -2,7 +2,7 @@
 
 # 💳 R.AI
 
-### Autonomous Revenue Recovery Agent for Razorpay
+### Autonomous Revenue Recovery Agent 
 
 **Merchant revenue intelligence and recovery — policy-bounded, deterministic, and fully auditable.**
 
