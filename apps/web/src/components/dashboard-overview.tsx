@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { ActivityFeed } from "@/components/activity-feed";
@@ -31,6 +33,8 @@ export function DashboardOverview() {
   const [policy, setPolicy] = useState<MerchantPolicy | null>(null);
   const [activity, setActivity] = useState<{ title: string; description: string; time: string; kind: "analysis" | "strategy" | "recovered" }[]>([]);
   const [state, setState] = useState<LoadState>("loading");
+
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -71,7 +75,7 @@ export function DashboardOverview() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [refresh]);
 
   const metrics = useMemo(() => {
     if (!summary) {
@@ -79,32 +83,22 @@ export function DashboardOverview() {
     }
     return [
       {
-        label: "Revenue at Risk",
-        value: formatInr(summary.revenue_at_risk),
-        note: "Open recovery cases from failed and abandoned payments."
-      },
-      {
         label: "Actions executed",
-        value: String(execution?.actions_executed ?? 0),
+        value: execution ? String(execution.actions_executed) : "—",
         note: "Policy-approved executions that reached a provider or no-op success."
       },
       {
-        label: "Revenue recovered",
-        value: formatInr(overview?.recovered_revenue ?? "0.00"),
-        note: "Observed paid outcomes, not successful execution intent."
-      },
-      {
         label: "Actions blocked",
-        value: String(execution?.actions_blocked ?? 0),
+        value: execution ? String(execution.actions_blocked) : "—",
         note: "Deterministic Policy Engine denials."
       },
       {
         label: "Approvals pending",
-        value: String(execution?.approvals_pending ?? 0),
+        value: execution ? String(execution.approvals_pending) : "—",
         note: "High-value or uncertain cases waiting for an operator."
       }
     ];
-  }, [summary, execution, overview]);
+  }, [summary, execution]);
 
   const executionMetrics = useMemo(() => {
     if (!execution) {
@@ -130,7 +124,7 @@ export function DashboardOverview() {
       },
       {
         label: "AI cases analyzed",
-        value: String(aiSummary?.cases_analyzed ?? 0),
+        value: aiSummary ? String(aiSummary.cases_analyzed) : "—",
         note: "Stored recommendations. The dashboard does not trigger analysis."
       }
     ];
@@ -138,16 +132,37 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-8">
-      <section className="flex flex-col gap-4 border-b border-line pb-6 lg:flex-row lg:items-end lg:justify-between">
+      <section className="workspace-hero grid gap-8 xl:grid-cols-2 xl:items-end">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-accent">Operations Dashboard</p>
-          <h1 className="mt-2 text-3xl font-semibold text-ink">Revenue recovery command center</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-ink/70">
-            Recovery, policy, execution, and observed outcome signals for daily operations.
-          </p>
+          <h1>Revenue recovery</h1>
+          <p className="mt-4 max-w-lg leading-7">Track revenue at risk, review recovery cases, and see which payments recovered.</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Link className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-ink" href="/recovery">Open recovery queue</Link>
+            <Link className="rounded-md bg-field px-4 py-2 text-sm font-semibold text-ink" href="/approvals">Review approvals</Link>
+          </div>
         </div>
-        <HealthIndicator />
+        <dl className="grid gap-5 border-t border-white/25 pt-6 sm:grid-cols-2 xl:border-t-0 xl:pt-0" aria-busy={state === "loading"}>
+          <div>
+            <dt className="text-sm text-white/80">Revenue at risk</dt>
+            <dd key={summary?.revenue_at_risk ?? "risk"} className="workspace-metric mt-2 break-words text-3xl tabular-nums">
+              {summary ? formatInr(summary.revenue_at_risk) : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-sm text-white/80">Observed recovery</dt>
+            <dd key={overview?.recovered_revenue ?? "recovered"} className="workspace-metric mt-2 break-words text-3xl tabular-nums">
+              {overview ? formatInr(overview.recovered_revenue) : "—"}
+            </dd>
+          </div>
+        </dl>
       </section>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <HealthIndicator key={refresh} />
+        <button type="button" className="workspace-tool" disabled={state === "loading"}
+          onClick={() => { setState("loading"); setRefresh((value) => value + 1); }}>
+          <RefreshCw size={15} aria-hidden /> {state === "loading" ? "Refreshing…" : "Refresh data"}
+        </button>
+      </div>
 
       {state === "loading" ? <StatusNotice title="Loading recovery metrics" description="Fetching summary data from the R.AI API." /> : null}
       {state === "error" ? (
@@ -160,7 +175,12 @@ export function DashboardOverview() {
         />
       ) : null}
       {state === "ready" ? <MetricGrid metrics={metrics} /> : null}
-      {state === "ready" && execution ? <MetricGrid metrics={executionMetrics} /> : null}
+      {state === "ready" && execution ? (
+        <details className="workspace-panel p-5">
+          <summary className="cursor-pointer font-semibold">Execution and provider metrics</summary>
+          <div className="mt-4"><MetricGrid metrics={executionMetrics} /></div>
+        </details>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <ActivityFeed items={activity} subtitle="Recent action executions from the Policy Engine and Action Executor." />
@@ -173,21 +193,21 @@ export function DashboardOverview() {
               </p>
             </div>
             <span className="rounded-full border border-line bg-field px-3 py-1 text-xs font-semibold text-ink/70">
-              {policy?.autonomous_execution ? "Autonomous scoped" : "Approval first"}
+              {policy ? (policy.autonomous_execution ? "Scoped autonomy" : "Approval first") : "Unavailable"}
             </span>
           </div>
           <div className="mt-6 grid gap-3 text-sm text-ink/75">
             <div className="flex items-center justify-between border-t border-line pt-3">
               <span>High-value approval</span>
-              <span className="font-semibold text-ink">{policy?.require_approval_for_high_value ? "Required" : "Off"}</span>
+              <span className="font-semibold text-ink">{policy ? (policy.require_approval_for_high_value ? "Required" : "Off") : "—"}</span>
             </div>
             <div className="flex items-center justify-between border-t border-line pt-3">
               <span>Payment Link recovery</span>
-              <span className="font-semibold text-ink">{policy?.payment_link_creation_allowed ? "Enabled" : "Disabled"}</span>
+              <span className="font-semibold text-ink">{policy ? (policy.payment_link_creation_allowed ? "Enabled" : "Disabled") : "—"}</span>
             </div>
             <div className="flex items-center justify-between border-t border-line pt-3">
               <span>Provider</span>
-              <span className="font-semibold text-ink">{execution?.provider ?? "mock"}</span>
+              <span className="font-semibold text-ink">{execution?.provider ?? "—"}</span>
             </div>
           </div>
         </div>

@@ -60,10 +60,14 @@ export function PaymentsTable() {
         </p>
       </section>
 
-      <div className="flex flex-wrap gap-3">
+      <div className="workspace-panel flex flex-wrap gap-3 p-4">
         <FilterSelect label="Status" value={status} options={STATUSES} onChange={(value) => { setOffset(0); setStatus(value); }} />
         <FilterSelect label="Method" value={method} options={METHODS} onChange={(value) => { setOffset(0); setMethod(value); }} />
         <FilterSelect label="Failure" value={failure} options={FAILURES} onChange={(value) => { setOffset(0); setFailure(value); }} />
+        {status || method || failure ? (
+          <button type="button" className="workspace-tool self-end"
+            onClick={() => { setOffset(0); setStatus(""); setMethod(""); setFailure(""); }}>Clear filters</button>
+        ) : null}
       </div>
 
       {state === "loading" ? <StatusNotice title="Loading payments" description="Requesting the payments API." /> : null}

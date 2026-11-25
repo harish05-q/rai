@@ -5,15 +5,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        ink: "#15201c",
-        field: "#f5f7f2",
-        line: "#d9ded6",
+        ink: "#20382b",
+        field: "#edf2e7",
+        line: "#cbd9c8",
         success: "#168a5b",
         warning: "#b86f00",
-        accent: "#236b8e"
+        accent: "#376344"
       },
       boxShadow: {
-        soft: "0 16px 40px rgba(21, 32, 28, 0.08)"
+        soft: "0 16px 40px rgba(32, 56, 43, 0.055)"
       }
     }
   },

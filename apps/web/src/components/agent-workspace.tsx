@@ -29,6 +29,7 @@ export function AgentWorkspace() {
   const [summary, setSummary] = useState<AgentSummary | null>(null);
   const [activity, setActivity] = useState<AgentActivityItem[]>([]);
   const [cases, setCases] = useState<RecoveryCaseListItem[]>([]);
+  const [caseSearch, setCaseSearch] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +84,9 @@ export function AgentWorkspace() {
       }
     ];
   }, [summary]);
+
+  const visibleCases = cases.filter((item) => item.id === selectedId ||
+    item.external_payment_id.toLowerCase().includes(caseSearch.trim().toLowerCase()));
 
   function runAnalysis() {
     if (!selectedId) {
@@ -158,6 +162,11 @@ export function AgentWorkspace() {
             Analysis runs only when requested. No payment operation is performed.
           </p>
           <label className="mt-4 block text-sm text-ink/70">
+            Find a recent case by payment ID
+            <input type="search" className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2"
+              value={caseSearch} onChange={(event) => setCaseSearch(event.target.value)} />
+          </label>
+          <label className="mt-4 block text-sm text-ink/70">
             Recent recovery cases
             <select
               className="mt-2 w-full rounded-md border border-line bg-white px-3 py-2 text-ink"
@@ -165,7 +174,7 @@ export function AgentWorkspace() {
               onChange={(event) => setSelectedId(event.target.value)}
             >
               {cases.length === 0 ? <option value="">No cases available</option> : null}
-              {cases.map((item) => (
+              {visibleCases.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.external_payment_id} · {formatLabel(item.suggested_action)} · score {formatScore(item.recoverability_score)}
                 </option>
@@ -187,7 +196,7 @@ export function AgentWorkspace() {
               </Link>
             ) : null}
           </div>
-          {error ? <p className="mt-3 text-sm text-warning">{error}</p> : null}
+          {error ? <p role="alert" className="mt-3 text-sm text-warning">{error}</p> : null}
         </div>
 
         <div className="rounded-lg border border-line bg-white p-6 shadow-soft">

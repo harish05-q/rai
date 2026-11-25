@@ -1,66 +1,44 @@
-import {
-  Activity,
-  BarChart3,
-  Bot,
-  CreditCard,
-  Gauge,
-  RotateCcw,
-  ScrollText,
-  Settings,
-  ShieldCheck
-} from "lucide-react";
+import { BarChart3, Bot, CreditCard, Gauge, RotateCcw, ScrollText, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-const navigation = [
-  { href: "/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/payments", label: "Payments", icon: CreditCard },
-  { href: "/recovery", label: "Recovery", icon: RotateCcw },
-  { href: "/approvals", label: "Approvals", icon: ShieldCheck },
-  { href: "/agent", label: "Agent", icon: Bot },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/audit", label: "Audit", icon: ScrollText },
-  { href: "/settings", label: "Settings", icon: Settings }
+export const navigation = [
+  { href: "/dashboard", label: "Overview", description: "Revenue and recent activity", icon: Gauge, group: "Operations" },
+  { href: "/payments", label: "Payments", description: "Payment events and failures", icon: CreditCard, group: "Operations" },
+  { href: "/recovery", label: "Recovery", description: "Recovery queue and cases", icon: RotateCcw, group: "Operations" },
+  { href: "/approvals", label: "Approvals", description: "Review policy decisions", icon: ShieldCheck, group: "Operations" },
+  { href: "/agent", label: "Agent", description: "Analyze cases and recommendations", icon: Bot, group: "Oversight" },
+  { href: "/analytics", label: "Analytics", description: "Outcomes and evaluation", icon: BarChart3, group: "Oversight" },
+  { href: "/audit", label: "Audit", description: "Execution event history", icon: ScrollText, group: "Oversight" },
+  { href: "/settings", label: "Settings", description: "Merchant policy and guardrails", icon: Settings, group: "Oversight" }
 ];
 
-export function Sidebar({ pathname }: { pathname: string }) {
+export function Sidebar({ pathname, mobileOpen, onNavigate }: {
+  pathname: string;
+  mobileOpen: boolean;
+  onNavigate: () => void;
+}) {
   return (
-    <aside className="border-line bg-white/95 md:fixed md:inset-y-0 md:left-0 md:w-64 md:border-r">
-      <div className="flex h-full flex-col gap-6 px-4 py-5">
-        <Link href="/dashboard" className="flex items-center gap-3 rounded-lg px-2 py-1">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-ink text-white">
-            <Activity aria-hidden="true" size={20} />
+    <aside className="workspace-sidebar" data-mobile-open={mobileOpen}>
+      <Link href="/dashboard" className="workspace-brand" onClick={onNavigate}>
+        <span aria-hidden>r<b>.</b></span>
+        <div><strong>R.AI</strong><small>Revenue recovery</small></div>
+      </Link>
+      <nav id="workspace-nav" aria-label="Workspace">
+        {["Operations", "Oversight"].map((group) => (
+          <div key={group} className="workspace-group">
+            <p>{group}</p>
+            {navigation.filter((item) => item.group === group).map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link key={href} href={href} aria-current={active ? "page" : undefined} onClick={onNavigate}>
+                  <Icon size={18} aria-hidden /> {label}
+                </Link>
+              );
+            })}
           </div>
-          <div>
-            <div className="text-xl font-semibold text-ink">R.AI</div>
-            <div className="text-xs font-medium text-ink/60">Revenue Intelligence & Recovery</div>
-          </div>
-        </Link>
-
-        <nav className="grid gap-1">
-          {navigation.map((item) => {
-            const active = pathname === item.href || (item.href === "/dashboard" && pathname === "/");
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={[
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition",
-                  active ? "bg-field text-ink" : "text-ink/65 hover:bg-field hover:text-ink"
-                ].join(" ")}
-              >
-                <Icon aria-hidden="true" size={18} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="mt-auto rounded-lg border border-line bg-field p-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-ink/50">Sprint 4</p>
-          <p className="mt-2 text-sm leading-6 text-ink/70">Policy-bounded execution. The LLM cannot call the payment provider.</p>
-        </div>
-      </div>
+        ))}
+        <Link href="/" className="workspace-home" onClick={onNavigate}>Back to landing page</Link>
+      </nav>
     </aside>
   );
 }

@@ -15,19 +15,25 @@ export function ApprovalCenter() {
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
   const [busy, setBusy] = useState<string | null>(null);
 
+  const [feedback, setFeedback] = useState("");
+
   useEffect(() => {
+    let active = true;
     getApprovals({ status: tab, limit: 50 })
       .then((payload) => {
+        if (!active) return;
         setItems(payload.items);
         setState("ready");
       })
-      .catch(() => setState("error"));
+      .catch(() => { if (active) setState("error"); });
+    return () => { active = false; };
   }, [tab]);
 
   const empty = useMemo(() => items.length === 0, [items.length]);
 
   function resolve(id: string, action: "approve" | "reject") {
     setBusy(id);
+    setFeedback("");
     const request = action === "approve" ? approveRequest(id, "Approved from Approval Center") : rejectRequest(id, "Rejected from Approval Center");
     request
       .then(() => getApprovals({ status: tab, limit: 50 }))
@@ -50,7 +56,9 @@ export function ApprovalCenter() {
           <button
             key={item}
             type="button"
-            onClick={() => setTab(item)}
+            aria-pressed={tab === item}
+            disabled={busy !== null}
+            onClick={() => { if (tab !== item) { setState("loading"); setFeedback(""); setTab(item); } }}
             className={[
               "rounded-md px-3 py-2 text-sm font-semibold",
               tab === item ? "bg-ink text-white" : "border border-line bg-white text-ink"
@@ -60,6 +68,8 @@ export function ApprovalCenter() {
           </button>
         ))}
       </div>
+
+      {feedback ? <p role="status" className="workspace-panel p-4 text-sm">{feedback}</p> : null}
 
       {state === "loading" ? <StatusNotice title="Loading approvals" description="Fetching approval requests." /> : null}
       {state === "error" ? <StatusNotice title="Unable to load approvals" description="The approvals API is unavailable." /> : null}
@@ -99,7 +109,7 @@ export function ApprovalCenter() {
                       <div className="flex gap-2">
                         <button
                           type="button"
-                          disabled={busy === item.id}
+                          disabled={busy !== null}
                           onClick={() => resolve(item.id, "approve")}
                           className="rounded-md bg-ink px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                         >
@@ -107,7 +117,7 @@ export function ApprovalCenter() {
                         </button>
                         <button
                           type="button"
-                          disabled={busy === item.id}
+                          disabled={busy !== null}
                           onClick={() => resolve(item.id, "reject")}
                           className="rounded-md border border-line px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
                         >

@@ -174,6 +174,13 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
 
           {error ? <p className="text-sm text-warning">{error}</p> : null}
 
+          <nav aria-label="On this case" className="workspace-panel flex flex-wrap gap-2 p-3">
+            <a className="workspace-tool" href="#lifecycle">Recovery lifecycle</a>
+            <a className="workspace-tool" href="#analysis">R.AI analysis</a>
+            <a className="workspace-tool" href="#policy">Policy and execution</a>
+            <a className="workspace-tool" href="#outcomes">Observed outcomes</a>
+            <a className="workspace-tool" href="#history">Execution history</a>
+          </nav>
           <section className="grid gap-4 md:grid-cols-4">
             <article className="rounded-lg border border-line bg-white p-5 shadow-soft">
               <p className="text-sm text-ink/60">Revenue at risk</p>
@@ -193,7 +200,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             </article>
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <section id="lifecycle" className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-ink">Recovery lifecycle</h2>
               <span className="text-xs text-ink/55">Recovered requires an observed paid outcome.</span>
@@ -242,7 +249,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             </dl>
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <section id="analysis" className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold text-ink">R.AI analysis</h2>
@@ -276,7 +283,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             )}
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <section id="policy" className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-ink">Policy and execution</h2>
             <p className="mt-1 text-sm text-ink/60">{preview?.reason ?? "Analyze the case to evaluate deterministic policy."}</p>
             <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
@@ -334,7 +341,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             ) : null}
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <section id="outcomes" className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-ink">Observed outcomes</h2>
             {outcomes.length === 0 ? <p className="mt-3 text-sm text-ink/65">No provider outcome has been observed yet.</p> : (
               <ul className="mt-4 divide-y divide-line text-sm">
@@ -343,7 +350,7 @@ export function RecoveryCaseDetailView({ caseId }: { caseId: string }) {
             )}
           </section>
 
-          <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
+          <section id="history" className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <h2 className="text-lg font-semibold text-ink">Execution history</h2>
             {executions.length === 0 ? (
               <p className="mt-3 text-sm text-ink/65">No executions yet.</p>

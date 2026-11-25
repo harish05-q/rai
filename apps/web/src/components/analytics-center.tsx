@@ -47,7 +47,7 @@ function Breakdown({ title, values }: { title: string; values: Record<string, nu
               <span className="font-semibold">{value}</span>
             </div>
             <div className="mt-2 h-2 rounded-full bg-field">
-              <div className="h-2 rounded-full bg-accent" style={{ width: `${total ? (value / total) * 100 : 0}%` }} />
+              <div className="workspace-bar h-2 rounded-full bg-accent" style={{ width: `${total ? (value / total) * 100 : 0}%` }} />
             </div>
           </div>
         ))}
@@ -115,6 +115,13 @@ export function AnalyticsCenter() {
       {loading ? <StatusNotice title="Loading performance data" description="Reading recovery, outcome, action, and evaluation APIs." /> : null}
       {error ? <StatusNotice title="Performance data unavailable" description={error} /> : null}
       {overview && metrics ? (
+        <nav aria-label="Analytics sections" className="workspace-panel flex flex-wrap gap-2 p-3">
+          <a href="#comparison" className="workspace-tool">Baseline comparison</a>
+          <a href="#outcome-breakdowns" className="workspace-tool">Outcomes and actions</a>
+          {demo ? <a href="#mock-demo" className="workspace-tool">Mock demo results</a> : null}
+        </nav>
+      ) : null}
+      {overview && metrics ? (
         <>
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Metric label="Revenue at risk" value={formatInr(overview.revenue_at_risk)} />
@@ -128,7 +135,7 @@ export function AnalyticsCenter() {
             <Metric label="Approval rate" value={percent(metrics.approval_rate)} />
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
+          <section id="comparison" className="grid gap-6 xl:grid-cols-2">
             <div className="rounded-lg border border-line bg-white p-6 shadow-soft">
               <h2 className="text-lg font-semibold text-ink">Baseline vs R.AI</h2>
               <p className="mt-1 text-xs text-ink/55">Synthetic evaluation on the same stored cases, not live settlement.</p>
@@ -140,7 +147,7 @@ export function AnalyticsCenter() {
             {recovery ? <Breakdown title="Recovery funnel" values={recovery.funnel} /> : null}
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-3">
+          <section id="outcome-breakdowns" className="grid gap-6 xl:grid-cols-3">
             {actions ? <Breakdown title="Action and workflow breakdown" values={{ ...actions.by_action, ...actions.by_workflow }} /> : null}
             {outcomes ? <Breakdown title="Outcome breakdown" values={outcomes.by_status} /> : null}
             <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
@@ -155,7 +162,7 @@ export function AnalyticsCenter() {
         </>
       ) : null}
 
-      {demo ? <section className="rounded-lg border border-accent/30 bg-accent/5 p-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold text-ink">Mock demo complete</h2><span className="text-sm font-semibold">{demo.recovered ? "Recovered" : "Observed"}</span></div><p className="mt-2 text-sm text-ink/65">{demo.disclaimer}</p><ol className="mt-4 grid gap-2 text-sm md:grid-cols-3">{demo.steps.map((step) => <li key={step.stage} className="rounded-md border border-line bg-white p-3"><span className="font-semibold">{step.label}</span><span className="mt-1 block text-ink/55">{step.detail}</span></li>)}</ol></section> : null}
+      {demo ? <section id="mock-demo" className="rounded-lg border border-accent/30 bg-accent/5 p-6"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold text-ink">Mock demo complete</h2><span className="text-sm font-semibold">{demo.recovered ? "Recovered" : "Observed"}</span></div><p className="mt-2 text-sm text-ink/65">{demo.disclaimer}</p><ol className="mt-4 grid gap-2 text-sm md:grid-cols-3">{demo.steps.map((step) => <li key={step.stage} className="rounded-md border border-line bg-white p-3"><span className="font-semibold">{step.label}</span><span className="mt-1 block text-ink/55">{step.detail}</span></li>)}</ol></section> : null}
     </div>
   );
 }

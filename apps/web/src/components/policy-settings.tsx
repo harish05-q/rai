@@ -22,11 +22,9 @@ export function PolicySettings() {
   }, []);
 
   function toggle(key: keyof MerchantPolicy, value: boolean) {
-    if (!policy) {
+    if (!policy || saving) {
       return;
     }
-    const next = { ...policy, [key]: value };
-    setPolicy(next);
     persist({ [key]: value });
   }
 
@@ -60,7 +58,9 @@ export function PolicySettings() {
 
       {state === "ready" && policy ? (
         <section className="rounded-lg border border-line bg-white p-6 shadow-soft">
-          <dl className="grid gap-5 text-sm">
+          <fieldset disabled={saving} aria-busy={saving}>
+          <legend className="sr-only">Merchant guardrails</legend>
+          <div className="grid gap-5 text-sm">
             <SettingRow
               label="Autonomous execution"
               description="When off, provider actions require approval."
@@ -103,12 +103,13 @@ export function PolicySettings() {
               checked={policy.subscription_recovery_allowed}
               onChange={(value) => toggle("subscription_recovery_allowed", value)}
             />
-          </dl>
+          </div>
+          </fieldset>
           <p className="mt-6 text-xs text-ink/50">
             Policy version {policy.policy_version}
             {saving ? " · saving" : ""}
           </p>
-          {message ? <p className="mt-2 text-sm text-ink/70">{message}</p> : null}
+          {message ? <p role="status" className="mt-2 text-sm text-ink/70">{message}</p> : null}
         </section>
       ) : null}
     </div>
@@ -135,14 +136,15 @@ function SettingRow({
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={[
-          "relative h-6 w-11 rounded-full",
+          "relative h-6 w-11 shrink-0 rounded-full disabled:opacity-60",
           checked ? "bg-ink" : "bg-line"
         ].join(" ")}
       >
-        <span className={["absolute top-0.5 h-5 w-5 rounded-full bg-white transition", checked ? "left-5" : "left-0.5"].join(" ")} />
+        <span className={["absolute top-0.5 h-5 w-5 rounded-full bg-white transition", checked ? "left-0.5 translate-x-[1.125rem]" : "left-0.5 translate-x-0"].join(" ")} />
       </button>
     </div>
   );

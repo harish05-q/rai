@@ -83,11 +83,15 @@ export function RecoveryQueue() {
 
       {notice ? <p className="text-sm text-ink/70">{notice}</p> : null}
 
-      <div className="flex flex-wrap gap-3">
+      <div className="workspace-panel flex flex-wrap gap-3 p-4">
         <FilterSelect label="Status" value={status} options={STATUSES} onChange={(value) => { setOffset(0); setStatus(value); }} />
         <FilterSelect label="Priority" value={priority} options={PRIORITIES} onChange={(value) => { setOffset(0); setPriority(value); }} />
         <FilterSelect label="Eligibility" value={eligibility} options={ELIGIBILITY} onChange={(value) => { setOffset(0); setEligibility(value); }} />
         <FilterSelect label="Action" value={action} options={ACTIONS} onChange={(value) => { setOffset(0); setAction(value); }} />
+        {status || priority || eligibility || action ? (
+          <button type="button" className="workspace-tool self-end"
+            onClick={() => { setOffset(0); setStatus(""); setPriority(""); setEligibility(""); setAction(""); }}>Clear filters</button>
+        ) : null}
       </div>
 
       {state === "loading" ? <StatusNotice title="Loading recovery cases" description="Requesting the recovery cases API." /> : null}

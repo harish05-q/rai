@@ -22,6 +22,10 @@ export function AuditTimeline() {
       .catch(() => setState("error"));
   }, [caseId]);
 
+  const [source, setSource] = useState("");
+  const sources = [...new Set(items.map((item) => item.source))].sort();
+  const visible = items.filter((item) => !source || !sources.includes(source) || item.source === source);
+
   const subtitle = useMemo(
     () =>
       caseId
@@ -45,12 +49,21 @@ export function AuditTimeline() {
       ) : null}
 
       {state === "ready" && items.length > 0 ? (
+        <>
+        <label className="workspace-panel mb-5 flex flex-wrap items-center gap-3 p-4 text-sm font-medium">
+          Event source
+          <select className="workspace-tool" value={sources.includes(source) ? source : ""} onChange={(event) => setSource(event.target.value)}>
+            <option value="">All sources</option>
+            {sources.map((item) => <option key={item} value={item}>{formatLabel(item)}</option>)}
+          </select>
+          <span className="text-ink/70" aria-live="polite">{visible.length} of {items.length} loaded events</span>
+        </label>
         <ol className="space-y-0">
-          {items.map((item, index) => (
+          {visible.map((item, index) => (
             <li key={item.id} className="relative grid grid-cols-[16px_1fr] gap-4 pb-8 last:pb-0">
               <div className="flex flex-col items-center">
                 <span className="mt-1 h-3 w-3 rounded-full bg-ink" />
-                {index < items.length - 1 ? <span className="w-px flex-1 bg-line" /> : null}
+                {index < visible.length - 1 ? <span className="w-px flex-1 bg-line" /> : null}
               </div>
               <article className="rounded-lg border border-line bg-white p-5 shadow-soft">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -78,6 +91,7 @@ export function AuditTimeline() {
             </li>
           ))}
         </ol>
+        </>
       ) : null}
     </div>
   );
