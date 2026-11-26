@@ -9,6 +9,9 @@
 [![Mode](https://img.shields.io/badge/Mode-Mock%20First-22C55E?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-Unspecified-lightgrey?style=for-the-badge)](#)
 
+**[Live Demo](https://rai-live-demo.onrender.com/)**
+The demo uses synthetic data and mock payments. The first visit after inactivity may take about a minute.
+
 <br/>
 
 <sub>🔒 The LLM never executes payment-provider operations. The Policy Engine is deterministic application code.</sub>
