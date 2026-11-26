@@ -52,6 +52,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </header>
         <main id="workspace-content" tabIndex={-1} className="workspace-main">
+          {process.env.NEXT_PUBLIC_RAI_PUBLIC_DEMO === "1" ? (
+            <p className="workspace-panel mb-4 p-3 text-sm">
+              Shared demo with synthetic data. To try a mock recovery, open Analytics and select Run Recovery Demo.
+            </p>
+          ) : null}
           <div key={pathname} className="workspace-view">{children}</div>
         </main>
       </div>

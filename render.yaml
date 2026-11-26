@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: rai-live-demo
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./deploy/demo.Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeployTrigger: off
