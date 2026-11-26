@@ -48,19 +48,20 @@
 
 ## Screenshots
 
+### Landing Page
+![R.AI landing page with the recovery loop illustration](docs/screenshots/landing-page.png)
+
+### Interactive Recovery Journey
+![Landing page walkthrough showing the Detect, Diagnose, Check, and Observe stages](docs/screenshots/landing-recovery-journey.png)
+
 ### Dashboard
-![R.AI Dashboard](docs/screenshots/dashboard1.png) (docs/screenshots/dashboard2.png)
+![Revenue recovery dashboard showing at-risk revenue and action metrics](docs/screenshots/workspace-overview.png)
 
-### Recovery Flow
-![Recovery Lifecycle](docs/screenshots/recovery.png)
+### Payments
+![Payment events table with status, method, and failure filters](docs/screenshots/workspace-payments.png)
 
-### Agent
-![Agent](docs/screenshots/agent.png)
-
-### Analytics Overview
-![Analytics](docs/screenshots/analytics.png)
-
-
+### Analytics
+![Analytics overview comparing recovery and baseline metrics on synthetic data](docs/screenshots/workspace-analytics.png)
 
 ## 📚 Table of Contents
 
